@@ -58,12 +58,14 @@ class GameState(Enum):
 class TemplateMatcher:
     def __init__(self, templates_dir: Path):
         self.templates: dict[str, np.ndarray] = {}
-        self.threshold = 0.7
+        self.threshold = 0.9
         if templates_dir and templates_dir.exists():
             for f in sorted(templates_dir.rglob("*")):
                 if f.is_file() and f.suffix.lower() in (".png", ".jpg", ".jpeg", ".bmp"):
                     img = cv2.imread(str(f))
                     if img is not None:
+                        if len(img.shape) == 3:
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                         self.templates[f.stem] = img
                         logger.info(f"Loaded template [{f.stem}] {img.shape[1]}x{img.shape[0]}")
             logger.info(f"Total {len(self.templates)} templates loaded")
@@ -74,8 +76,16 @@ class TemplateMatcher:
         if tpl is None:
             return False, 0.0, None
         th = threshold or self.threshold
-        h, w = tpl.shape[:2]
-        res = cv2.matchTemplate(frame, tpl, cv2.TM_CCOEFF_NORMED)
+        if len(frame.shape) == 3:
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            frame_gray = frame
+        if len(tpl.shape) == 3:
+            tpl_gray = cv2.cvtColor(tpl, cv2.COLOR_BGR2GRAY)
+        else:
+            tpl_gray = tpl
+        h, w = tpl_gray.shape[:2]
+        res = cv2.matchTemplate(frame_gray, tpl_gray, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(res)
         if max_val >= th:
             cx = max_loc[0] + w // 2
@@ -92,8 +102,16 @@ class TemplateMatcher:
         if tpl is None:
             return []
         th = threshold or self.threshold
-        h, w = tpl.shape[:2]
-        res = cv2.matchTemplate(frame, tpl, cv2.TM_CCOEFF_NORMED)
+        if len(frame.shape) == 3:
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            frame_gray = frame
+        if len(tpl.shape) == 3:
+            tpl_gray = cv2.cvtColor(tpl, cv2.COLOR_BGR2GRAY)
+        else:
+            tpl_gray = tpl
+        h, w = tpl_gray.shape[:2]
+        res = cv2.matchTemplate(frame_gray, tpl_gray, cv2.TM_CCOEFF_NORMED)
         locs = np.where(res >= th)
         results = []
         for pt in zip(*locs[::-1]):
@@ -115,13 +133,11 @@ class StateDetector:
 
     def detect(self, frame: np.ndarray) -> GameState:
         thresholds = {
-            "event_screen": 0.6,
             "auto_battle_off": 0.95,
             "wrong_page": 0.98,
             "codex_btn3": 0.95,
         }
         checks = [
-            ("buff_select", GameState.BUFF_SELECT),
             ("auto_battle_off", GameState.AUTO_BATTLE_OFF),
             ("combat_screen", GameState.COMBAT),
             ("combat_victory", GameState.COMBAT_VICTORY),
@@ -134,9 +150,9 @@ class StateDetector:
             ("neutral_card_skip", GameState.NEUTRAL_CARD_SKIP),
             ("result_settle", GameState.RESULT_NEXT),
             ("settlement_click", GameState.RESULT_NEXT),
-            ("settlement_confirm", GameState.RESULT_NEXT),
             ("node_settlement", GameState.RESULT_NEXT),
             ("next_step", GameState.RESULT_NEXT),
+            ("dismantle_confirm", GameState.RESULT_NEXT),
             ("fate_reward", GameState.FATE_REWARD),
             ("event_screen", GameState.EVENT_SCREEN),
             ("event_option", GameState.EVENT_SCREEN),
@@ -156,6 +172,7 @@ class StateDetector:
             ("team_confirm", GameState.TEAM_ENTER),
             ("codex_select", GameState.CODEX_SELECT),
             ("codex_synth", GameState.CODEX_SYNTH),
+            ("codex_btn0", GameState.CODEX_SYNTH),
             ("codex_btn1", GameState.CODEX_SYNTH),
             ("codex_btn2", GameState.CODEX_SYNTH),
             ("codex_btn3", GameState.CODEX_SYNTH),
@@ -175,10 +192,12 @@ class StateDetector:
             ("strong_select", GameState.SELECT_CHARACTER),
             ("delete_save", GameState.DELETE_SAVE),
             ("dream_confirm", GameState.DREAM_CONFIRM),
+            ("settlement_confirm", GameState.RESULT_NEXT),
+            ("buff_select", GameState.BUFF_SELECT),
         ]
         for tpl_name, state in checks:
             if self.matcher.exists(tpl_name):
-                th = thresholds.get(tpl_name, 0.8)
+                th = thresholds.get(tpl_name, 0.9)
                 found, conf, pos = self.matcher.match(frame, tpl_name, threshold=th)
                 if found:
                     logger.debug(f"State: {state.value} (conf={conf:.3f})")

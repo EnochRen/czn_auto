@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# gui.py - 锦s?????! GUI 棨MAA k??
+# gui.py - 卡厄思梦境自动刷取 GUI (MAA 风格)
 import ctypes
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -123,8 +123,8 @@ class ConfigDialog(tk.Toplevel):
 
         btn_frame = ttk.Frame(self)
         btn_frame.pack(fill=tk.X, padx=10, pady=(10, 10), side=tk.BOTTOM)
-        ttk.Button(btn_frame, text="    ", style="Accent.TButton", command=self.save).pack(side=tk.RIGHT, padx=(5, 0))
-        ttk.Button(btn_frame, text="  !  ", command=self.destroy).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(btn_frame, text="保存", style="Accent.TButton", command=self.save).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(btn_frame, text="取消", command=self.destroy).pack(side=tk.RIGHT, padx=(5, 0))
 
         nb = ttk.Notebook(self)
         nb.pack(fill=tk.BOTH, expand=True, padx=10, pady=(10, 0))
@@ -168,7 +168,7 @@ class ConfigDialog(tk.Toplevel):
         for i, (key, val) in enumerate(self.cfg.get("click_points", {}).items()):
             if isinstance(val, list) and len(val) == 4:
                 desc = region_tips.get(key, key)
-                lbl = ttk.Label(sf, text=f"???{desc}", width=32, anchor="w")
+                lbl = ttk.Label(sf, text=f"配置: {desc}", width=32, anchor="w")
                 lbl.grid(row=i, column=0, sticky="w", padx=5, pady=2)
                 if key in region_tips:
                     ToolTip(lbl, region_tips[key])
@@ -242,6 +242,11 @@ class ConfigDialog(tk.Toplevel):
                                   values=["国际服", "国服"],
                                   width=12, state="readonly")
         server_cb.grid(row=0, column=1, padx=5, pady=10, sticky="w")
+        def _check_server(event):
+            if self.server_var.get() == "国服":
+                messagebox.showwarning("国服暂不支持", "国服模板尚未完善，目前仅支持国际服。\n请选择「国际服」继续使用。")
+                self.server_var.set("国际服")
+        server_cb.bind("<<ComboboxSelected>>", _check_server)
         ttk.Label(sf, text="开发中...", foreground="#888").grid(row=0, column=2, padx=5, pady=10, sticky="w")
 
         mf = ttk.Frame(nb); nb.add(mf, text="运行模式")
@@ -288,7 +293,7 @@ class ConfigDialog(tk.Toplevel):
 
         self.keep_mouse_var = tk.BooleanVar(value=self.cfg.get("debug", {}).get("keep_mouse", False))
         ttk.Label(mf, text="调试模式:", foreground=COLOR_ACCENT).grid(row=4, column=0, padx=10, pady=(15, 2), sticky="w")
-        ttk.Checkbutton(mf, text="鼠标不归位", variable=self.keep_mouse_var).grid(row=4, column=1, padx=5, pady=(15, 2), sticky="w")
+        tk.Checkbutton(mf, text="鼠标不归位", variable=self.keep_mouse_var, bg=COLOR_CARD, fg=COLOR_TEXT, selectcolor=COLOR_CARD, activebackground=COLOR_CARD, activeforeground=COLOR_TEXT).grid(row=4, column=1, padx=5, pady=(15, 2), sticky="w")
 
         zf = ttk.Frame(nb); nb.add(zf, text="赛季图初始刷取")
         zf_canvas = tk.Canvas(zf, bg=COLOR_BG, highlightthickness=0)
@@ -339,7 +344,7 @@ class ConfigDialog(tk.Toplevel):
         ToolTip(f, "Buff 选择区域坐标\nOCR 扫描识别关键词的区域")
         row += 1
 
-        ttk.Label(sf, text="????", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
+        ttk.Label(sf, text="退出关键词", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
         exit_kws = ocr_cfg.get("exit_keywords", exit_kw_default)
         self.ocr_exit_kw = tk.StringVar(value=",".join(exit_kws))
         e3 = ttk.Entry(sf, textvariable=self.ocr_exit_kw, width=24)
@@ -347,17 +352,17 @@ class ConfigDialog(tk.Toplevel):
         ToolTip(e3, "退出时所需关键词，逗号分隔\n用于OCR匹配，找到其中一个即退出\n默认ESC,退出\n国际服通常为 ESC,退出,_J")
         row += 1
 
-        ttk.Label(sf, text="?????", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
+        ttk.Label(sf, text="退出关键词偏移", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
         exit_offs = ocr_cfg.get("exit_keyword_offsets", [[0, -20], [0, 0], [0, 0]])
         off_strs = [f"{o[0]},{o[1]}" for o in exit_offs]
         self.ocr_exit_off = tk.StringVar(value=";".join(off_strs))
         e4 = ttk.Entry(sf, textvariable=self.ocr_exit_off, width=24)
         e4.grid(row=row, column=1, padx=5, pady=(8, 2), sticky="w")
-        ToolTip(e4, "ÿ??ֵ5?(x,y)÷ֺwָ\n??ESC??Ҫ?: 0,-20")
+        ToolTip(e4, "偏移格式: 文字,x,y 用;分隔\n按ESC取消: 0,-20")
         row += 1
 
-        ttk.Label(sf, text="Buff OCRؼ??", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
-        buff_ocr_kw_default = "??һ????Yg?????HP׃??" if is_global else "??һ????ڼ?????HP??"
+        ttk.Label(sf, text="Buff OCR设置", foreground=COLOR_ACCENT).grid(row=row, column=0, padx=10, pady=(8, 2), sticky="w")
+        buff_ocr_kw_default = "一回合内Yg减少HP变化" if is_global else "一回合内格挡HP减少"
         self.ocr_buff_keyword = tk.StringVar(value=ocr_cfg.get("buff_ocr_keyword", buff_ocr_kw_default))
         eb = ttk.Entry(sf, textvariable=self.ocr_buff_keyword, width=30)
         eb.grid(row=row, column=1, padx=5, pady=(8, 2), sticky="w")
@@ -412,7 +417,7 @@ class ConfigDialog(tk.Toplevel):
         self.cfg.setdefault("debug", {})["keep_mouse"] = self.keep_mouse_var.get()
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(self.cfg, f, ensure_ascii=False, indent=2)
-        messagebox.showinfo("y", "ѱ棡")
+        messagebox.showinfo("成功", "已保存")
         self.destroy()
 
 
@@ -538,8 +543,8 @@ class CznZeroFarmGUI:
 
         self.sv = {}
         stat_items = [
-            ("??", "runs"), ("ս", "battles"),
-            ("Ӣ", "elites"), ("", "floors"), ("¼", "events")
+            ("局", "runs"), ("战", "battles"),
+            ("精", "elites"), ("层", "floors"), ("事", "events")
         ]
         for label, key in stat_items:
             sf = tk.Frame(stat_row, bg=COLOR_CARD)
@@ -554,17 +559,17 @@ class CznZeroFarmGUI:
         self.time_var = tk.StringVar(value="00:00:00")
         tk.Label(stat_row, textvariable=self.time_var, fg=COLOR_ACCENT, bg=COLOR_CARD,
                  font=("Segoe UI", 22, "bold")).pack(side=tk.RIGHT, padx=(10, 0))
-        tk.Label(stat_row, text="???", fg=COLOR_TEXT_SEC, bg=COLOR_CARD,
+        tk.Label(stat_row, text="耗时", fg=COLOR_TEXT_SEC, bg=COLOR_CARD,
                  font=("Segoe UI", 9)).pack(side=tk.RIGHT)
 
-        # ־
+        # 日志面板
         log_card = tk.Frame(right, bg=COLOR_CARD, bd=1, relief="solid",
                              highlightbackground=COLOR_BORDER, highlightthickness=1)
         log_card.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
 
         log_header = tk.Frame(log_card, bg=COLOR_CARD)
         log_header.pack(fill=tk.X, padx=12, pady=(8, 0))
-        tk.Label(log_header, text="??־", fg=COLOR_TEXT_SEC, bg=COLOR_CARD,
+        tk.Label(log_header, text="日志", fg=COLOR_TEXT_SEC, bg=COLOR_CARD,
                  font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
 
         self._log_font = font.Font(family="Consolas", size=self._log_font_size)
@@ -574,7 +579,7 @@ class CznZeroFarmGUI:
         self.log.pack(fill=tk.BOTH, expand=True, padx=10, pady=(6, 10))
         log_card.pack_propagate(False)
 
-        # Ctrl+־
+        # Ctrl+滚轮缩放
         def _zoom(event):
             size = self._log_font.cget("size")
             if event.delta > 0:
@@ -584,12 +589,12 @@ class CznZeroFarmGUI:
             self._log_font.configure(size=size)
         self.log.bind("<Control-MouseWheel>", _zoom)
 
-        # ============ ײ״??? ============
+        # ============ 底部状态栏 ============
         bottom = tk.Frame(main, bg=COLOR_SIDEBAR, height=32)
         bottom.pack(fill=tk.X, side=tk.BOTTOM)
         bottom.pack_propagate(False)
 
-        self.status_text = tk.Label(bottom, text="  |  F6???? F8c??  F9c", fg=COLOR_TEXT_SEC,
+        self.status_text = tk.Label(bottom, text="  |  F6=开始 F8=停止 F9=暂停", fg=COLOR_TEXT_SEC,
                                      bg=COLOR_SIDEBAR, font=("Segoe UI", 9), anchor="w")
         self.status_text.pack(side=tk.LEFT, padx=12)
 
@@ -612,7 +617,7 @@ class CznZeroFarmGUI:
             json.dump(cfg, f, ensure_ascii=False, indent=2)
         tdir = self._get_templates_dir()
         n = len(list(tdir.glob("*"))) if tdir.exists() else 0
-        logging.info(f"л??[{profile}] ({n} ??????")
+        logging.info(f"已加载 [{profile}] ({n} 个模板)")
 
     def _setup_hotkeys(self):
         self.root.bind("<F6>", lambda e: self.start())
@@ -623,10 +628,10 @@ class CznZeroFarmGUI:
             kb.add_hotkey("f6", self.start, suppress=True)
             kb.add_hotkey("f8", self.stop, suppress=True)
             kb.add_hotkey("f9", self.pause, suppress=True)
-            logging.info("+????ע?? F6=???? F8=c??  F9=c")
+            logging.info("热键已注册 F6=开始 F8=停止 F9=暂停")
         except Exception as e:
-            logging.warning(f"+????ע?ܣԱ(ޣ: {e}")
-            logging.info("?????? F6=???? F8=c??  F9=c")
+            logging.warning(f"热键注册失败(原因: {e})")
+            logging.info("使用备用热键 F6=开始 F8=停止 F9=暂停")
 
     def _setup_logging(self):
         handler = TextHandler(self.log)
@@ -643,7 +648,7 @@ class CznZeroFarmGUI:
         logging.getLogger().addHandler(fh)
         tdir = self._get_templates_dir()
         n = len(list(tdir.glob("*"))) if tdir.exists() else 0
-        logging.info(f"GUI ???? | #: [{self.profile_var.get()}] ({n} ??")
+        logging.info(f"GUI 启动完成 | 配置: [{self.profile_var.get()}] ({n} 个模板)")
 
     def _update_timer(self):
         if self._running and hasattr(self, '_start_time'):
@@ -657,7 +662,7 @@ class CznZeroFarmGUI:
         if running:
             self.btn_start.config(state=state_disabled, bg=COLOR_CARD, fg=COLOR_TEXT_SEC)
             self.btn_pause.config(state=state_normal, bg=COLOR_CARD, fg=COLOR_TEXT,
-                                   text="?? c" if not self._paused else "?? ")
+                                   text="暂停" if not self._paused else "继续")
             self.btn_stop.config(state=state_normal, bg="#c72e2e", fg=COLOR_TEXT)
         else:
             self.btn_start.config(state=state_normal, bg=COLOR_CARD, fg=COLOR_TEXT)
@@ -704,7 +709,7 @@ class CznZeroFarmGUI:
             self._pause_evt.clear()
             self.btn_pause.config(text="⏸ 暂停")
             self.status_lbl.config(text="运行中", fg=COLOR_GREEN)
-            logging.info("??")
+            logging.info("已暂停")
 
     def capture_mode(self):
         tdir = self._get_templates_dir()
@@ -726,8 +731,8 @@ class CznZeroFarmGUI:
                     path = tdir / name
                     ok = imwrite_unicode(path, frame)
                     if not ok:
-                        logging.error(f"?: {path}")
-                    logging.info(f"??ѱ??({cnt[0]}): {path.resolve()}")
+                        logging.error(f"写入失败: {path}")
+                    logging.info(f"已保存({cnt[0]}): {path.resolve()}")
                     time.sleep(0.5)
                 if kb.is_pressed("esc"):
                     logging.info(f"采集完成! 共{cnt[0]}张截图 -> {tdir.name}")
@@ -809,10 +814,11 @@ class CznZeroFarmGUI:
         season_reroll_entry_idx = 0
         season_reroll_exit_idx = 0
         season_reroll_buff_miss = 0
-        # ó־ñ־
+        # 重置状态标志
         self._codex_active = False
         self._buff_active = False
         self._buff_done = False
+        self._buff_cooldown = 0.0
         self._once = set()
 
         def _click(tpl_name=None, default_pos=None):
@@ -821,7 +827,7 @@ class CznZeroFarmGUI:
                 pos = (pos[0] + offsets[tpl_name][0], pos[1] + offsets[tpl_name][1])
             sim.click_at(pos[0], pos[1], res[0], res[1])
 
-        logging.info(f"=== ?????[#: {tdir.name}] ===")
+        logging.info(f"=== 开始运行 [配置: {tdir.name}] ===")
 
         while not self._stop_evt.is_set():
             if self._pause_evt.is_set():
@@ -857,7 +863,7 @@ class CznZeroFarmGUI:
                         if season_reroll_exit_idx < len(exit_kws):
                             kw = exit_kws[season_reroll_exit_idx]
                             offset = exit_offsets[season_reroll_exit_idx] if season_reroll_exit_idx < len(exit_offsets) else [0, 0]
-                            # ???????????ESC#壻??2????ӡRETREAT??3?????SKIP_CONFIRM
+                            # 0: OCR精确匹配ESC模板；1: 点击RETREAT；2+: 点击SKIP_CONFIRM
                             target_state = None
                             if season_reroll_exit_idx == 1:
                                 target_state = GameState.RETREAT
@@ -865,42 +871,42 @@ class CznZeroFarmGUI:
                                 target_state = GameState.SKIP_CONFIRM
                             if target_state is not None and state == target_state:
                                 cx, cy = detector.last_pos[0] + offset[0], detector.last_pos[1] + offset[1]
-                                logging.info(f"??#塸{kw}??{cx},{cy}) conf={detector.last_conf:.3f}")
+                                logging.info(f"模板匹配 {kw} ({cx},{cy}) conf={detector.last_conf:.3f}")
                                 sim.click_at(cx, cy, res[0], res[1])
                                 season_reroll_exit_idx += 1
                             else:
                                 pos = season_reroll_ocr.find_text(frame, kw, None, consecutive=True)
                                 if pos:
                                     cx, cy = pos[0] + offset[0], pos[1] + offset[1]
-                                    logging.info(f"??ҵ{kw}??{cx},{cy})")
+                                    logging.info(f"找到 {kw} ({cx},{cy})")
                                     sim.click_at(cx, cy, res[0], res[1])
                                     season_reroll_exit_idx += 1
                                 elif state == GameState.RETREAT:
                                     cx, cy = detector.last_pos[0] + offset[0], detector.last_pos[1] + offset[1]
-                                    logging.info(f"??#嶵׵???{kw}??{cx},{cy})")
+                                    logging.info(f"模板已到 {kw} ({cx},{cy})")
                                     sim.click_at(cx, cy, res[0], res[1])
                                     season_reroll_exit_idx += 1
                                 else:
-                                    logging.info(f"??4{kw}??")
+                                    logging.info(f"等待 {kw}")
                             time.sleep(sr_delay)
                         else:
                             season_reroll_exiting = False
                             season_reroll_entry_idx = 0
                             season_reroll_exit_idx = 0
                             season_reroll_buff_miss = 0
-                            logging.info("??c׼??½")
+                            logging.info("退出完成准备下一轮")
                         continue
                     entry_kws = ocr_cfg.get("entry_keywords", entry_default)
                     if season_reroll_entry_idx < len(entry_kws):
                         kw = entry_kws[season_reroll_entry_idx]
                         pos = season_reroll_ocr.find_text(frame, kw, None, consecutive=True)
                         if pos:
-                            logging.info(f"ڡҵ???{kw}??{season_reroll_entry_idx+1}/{len(entry_kws)})")
+                            logging.info(f"入口找到 {kw} ({season_reroll_entry_idx+1}/{len(entry_kws)})")
                             sim.click_at(pos[0], pos[1], res[0], res[1])
                             season_reroll_entry_idx += 1
                             time.sleep(5.0)
                         else:
-                            logging.info(f"ڡ4???{kw}??")
+                            logging.info(f"入口等待 {kw}")
                         time.sleep(sr_delay)
                         continue
                     kw = ocr_cfg.get("keyword", kw_default)
@@ -919,7 +925,7 @@ class CznZeroFarmGUI:
                                 _, bx, by, bw, bh = sorted_w[i]
                                 pos = (bx + bw // 2, by + bh // 2)
                                 break
-                    # ??+Ӵ
+                    # OCR失败+截图
                     if not pos:
                         all_text = "".join(t[0] for t in all_texts)
                         if kw in all_text:
@@ -929,42 +935,42 @@ class CznZeroFarmGUI:
                                     pos = (bx + bw // 2, by + bh // 2)
                                     break
                             if pos:
-                                logging.info(f"?!y+:{kw}??OCR:{all_text[:120]!r}) ??{pos[0]},{pos[1]})")
+                                logging.info(f"找到关键词: {kw} (OCR: {all_text[:120]!r}) 坐标 ({pos[0]},{pos[1]})")
                                 sim.click_at(pos[0], pos[1], res[0], res[1])
                                 self.stop()
                                 time.sleep(sr_delay)
                                 continue
                             else:
-                                logging.info(f"+OCRԭ: {all_text[:120]!r}")
+                                logging.info(f"OCR原文: {all_text[:120]!r}")
                                 import cv2
                                 cv2.imwrite("debug/buff_scan_fail.png", frame)
-                                logging.info("ѱ??debug/buff_scan_fail.png")
+                                logging.info("已保存 debug/buff_scan_fail.png")
                     if pos:
-                        logging.info(f"?!yҵ???{kw}??")
+                        logging.info(f"找到目标Buff: {kw}")
                         sim.click_at(pos[0], pos[1], res[0], res[1])
                         self.stop()
                     else:
                         season_reroll_buff_miss += 1
                         if season_reroll_buff_miss >= 2:
-                            logging.info(f"{season_reroll_buff_miss}?ҵ?????")
+                            logging.info(f"{season_reroll_buff_miss}次未找到，退出")
                             season_reroll_exiting = True
                             season_reroll_exit_idx = 0
                             season_reroll_buff_miss = 0
                         else:
-                            logging.info(f"?????Buff({season_reroll_buff_miss}????????")
+                            logging.info(f"未找到目标Buff({season_reroll_buff_miss}次，继续)")
                     time.sleep(sr_delay)
                     continue
 
                 if state == GameState.UNKNOWN:
                     unknown_cnt += 1
                     if unknown_cnt >= 50:
-                        logging.warning(f"{unknown_cnt}֡?֪4??")
+                        logging.warning(f"{unknown_cnt}次未知状态")
                         unknown_cnt = 0
                     time.sleep(sr_delay)
                     continue
                 unknown_cnt = 0; t = sc.timing
 
-                settlement_tpls = ["settlement_click", "settlement_confirm", "node_settlement", "next_step"]
+                settlement_tpls = ["settlement_click", "dismantle_confirm", "settlement_confirm", "node_settlement", "next_step"]
 
                 now = time.time()
                 if not hasattr(self, '_state_cd'):
@@ -973,10 +979,11 @@ class CznZeroFarmGUI:
                 if not hasattr(self, '_codex_active'): self._codex_active = False
                 if not hasattr(self, '_buff_active'): self._buff_active = False
                 if not hasattr(self, '_buff_done'): self._buff_done = False
+                if not hasattr(self, '_buff_cooldown'): self._buff_cooldown = 0.0
 
                 # Buff 模式只匹配 event_option2 状态
                 if self._buff_active:
-                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.8)
+                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.9)
                     if found:
                         logging.info(f"Buff event_option2 点击2次 ({conf:.2f})")
                         for _ in range(2):
@@ -984,6 +991,9 @@ class CznZeroFarmGUI:
                             time.sleep(0.2)
                         self._buff_active = False
                         self._buff_done = True
+                        self._buff_cooldown = time.time() + 5
+                    elif state != GameState.BUFF_SELECT:
+                        self._buff_active = False
                     else:
                         time.sleep(0.5)
                     continue
@@ -993,36 +1003,21 @@ class CznZeroFarmGUI:
                     self._codex_active = True
                     clicked = False
                     if state == GameState.CODEX_SYNTH and detector.last_template == "codex_synth":
-                        logging.info("骯??")
+                        logging.info("合成点击codex_synth")
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                         clicked = True
                     if not clicked:
-                        for tpl in ("codex_btn1", "codex_btn2"):
-                            found, conf, pos = detector.matcher.match(frame, tpl, 0.8)
+                        for tpl in ("codex_btn0", "codex_btn1", "codex_btn2"):
+                            found, conf, pos = detector.matcher.match(frame, tpl, 0.9)
                             if found:
-                                logging.info(f"骯{tpl} ({conf:.2f})")
+                                logging.info(f"合成 {tpl} ({conf:.2f})")
                                 sim.click_at(pos[0], pos[1], res[0], res[1])
                                 clicked = True; break
-                    if not clicked:
-                        found, conf, pos = detector.matcher.match(frame, "codex_btn3", 0.95)
-                        if found:
-                            logging.info(f"骯codex_btn3 ({conf:.2f}) 5?80ٵ??")
-                            import cv2 as _cv2
-                            _dbg = frame.copy()
-                            _cv2.circle(_dbg, (pos[0], pos[1] - 300), 10, (255, 0, 0), -1)
-                            _cv2.putText(_dbg, "1st: above-300", (10, 30), _cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                            _cv2.circle(_dbg, pos, 10, (0, 0, 255), -1)
-# AUTO-FAILED:                             _cv2.putText(_dbg, f"2nd: match ({pos[0]},{pos[1]})", (10, 60), _cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2")
-                            _cv2.imwrite("debug/codex_btn3_debug.png", _dbg)
-                            logging.info("ѱ??debug/codex_btn3_debug.png")
-                            sim.click_at(pos[0], pos[1] - 300, res[0], res[1])
-                            time.sleep(0.2)
-                            sim.click_at(pos[0], pos[1], res[0], res[1])
-                            clicked = True
+
                     if not clicked:
                         for tpl in ("settle_done_1", "settle_done_2"):
                             if detector.matcher.match(frame, tpl, 0.98)[0]:
-                                logging.info("?")
+                                logging.info("法典合成完成")
                                 self._codex_active = False
                                 clicked = True; break
                     if clicked:
@@ -1034,18 +1029,27 @@ class CznZeroFarmGUI:
                     time.sleep(sr_delay); continue
                 if state == GameState.MAIN_MENU:
                     self._buff_done = False
-# AUTO-FAILED:                     logging.info("主界面→零式系统"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    self._buff_cooldown = 0.0
+                    logging.info("主界面→零式系统")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.ZERO_SYSTEM_ENTRY:
-# AUTO-FAILED:                     logging.info("零式系统→选法典"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.CODEX_SELECT:
-# AUTO-FAILED:                     logging.info("选法典→确认进入"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("零式系统→选法典")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
+                elif state == GameState.CODEX_SELECT:
+                    logging.info("选法典→确认进入")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                     stats["runs"] += 1; self.root.after(0, self._update_stats, stats.copy())
                 elif state == GameState.TEAM_ENTER:
-# AUTO-FAILED:                     logging.info("配队→进入"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.BUFF_SELECT:
+                    logging.info("配队→进入")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
+                elif state == GameState.BUFF_SELECT:
                     if self._buff_done:
                         time.sleep(t["screenshot_interval"]); continue
-                    logging.info("Buff??4event_option2")
+                    if time.time() < self._buff_cooldown:
+                        time.sleep(t["screenshot_interval"]); continue
+                    self._buff_done = True
+                    self._buff_cooldown = time.time() + 300
+                    logging.info("Buff模式 首次选择")
                     if "buff_first_region" in cfg.get("click_points", {}):
                         rx, ry, rw, rh = cfg["click_points"]["buff_first_region"]
                         sim.click_at(rx + rw // 2, ry + rh // 2, res[0], res[1])
@@ -1056,104 +1060,142 @@ class CznZeroFarmGUI:
                     rooms = [("room_rest", 4), ("room_battle", 1), ("room_event", 2), ("room_elite", 3)]
                     clicked = False
                     for name, _ in rooms:
-                        found, conf, pos = detector.matcher.match(frame, name, threshold=0.8)
+                        found, conf, pos = detector.matcher.match(frame, name, threshold=0.9)
                         if found:
                             logging.info(f"{name} ({conf:.2f})")
                             sim.click_at(pos[0], pos[1], res[0], res[1])
                             clicked = True; break
                     if not clicked:
-                        logging.warning("????????|꣬,???")
+                        logging.warning("所有房间没匹配到，点击默认节点")
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.MAP_SCREEN:
-                    logging.info("|?????); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("地图点击默认节点")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.COMBAT:
                     combat_mod.execute_turn(frame, res, sim, sc)
                 elif state == GameState.COMBAT_VICTORY:
-# AUTO-FAILED:                     logging.info("ս?"); stats["battles"] += 1; combat_mod.reset_battle(")
+                    logging.info("战斗胜利"); stats["battles"] += 1; combat_mod.reset_battle()
                     self.root.after(0, self._update_stats, stats.copy())
                     time.sleep(t["post_click_wait"]); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.CARD_REWARD:
-# AUTO-FAILED:                     logging.info("ѡ"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.NEUTRAL_CARD_SKIP:
-                    logging.info("???????")
-                    _click(detector.last_template)
+                    logging.info("选卡奖励")
+                    _click("card_reward")
+                elif state == GameState.NEUTRAL_CARD_SKIP:
+                    logging.info("中立卡片跳过")
+                    _click("neutral_card_skip")
                 elif state == GameState.SKIP_CONFIRM:
-                    logging.info("???7??); _click(")
+                    logging.info("跳过确认")
+                    _click("skip_confirm")
                 elif state == GameState.RESULT_NEXT:
                     clicked = False
                     for tpl in settlement_tpls:
-                        found, conf, pos = detector.matcher.match(frame, tpl, 0.8)
+                        found, conf, pos = detector.matcher.match(frame, tpl, 0.9)
                         if found:
                             logging.info(f"{tpl} ({conf:.2f})")
-                            sim.click_at(pos[0], pos[1], res[0], res[1])
+                            if tpl == "settlement_confirm":
+                                sim.click_at(pos[0], pos[1], res[0], res[1])
+                                time.sleep(0.2)
+                                sim.click_at(pos[0] - 420, pos[1], res[0], res[1])
+                            else:
+                                sim.click_at(pos[0], pos[1], res[0], res[1])
                             clicked = True; break
                     if not clicked:
                         for tpl in ("settle_done_1", "settle_done_2"):
-                            if detector.matcher.exists(tpl) and detector.matcher.match(frame, tpl, 0.8)[0]:
+                            if detector.matcher.exists(tpl) and detector.matcher.match(frame, tpl, 0.9)[0]:
                                 logging.info("")
                                 clicked = True; break
-                        if not clicked:
+                    if not clicked:
+                        found, conf, pos = detector.matcher.match(frame, "codex_btn3", 0.95)
+                        if found:
+                            logging.info(f"合成 codex_btn3 ({conf:.2f}) 往上300像素点击")
+                            sim.click_at(pos[0], pos[1] - 300, res[0], res[1])
+                            time.sleep(0.2)
+                            sim.click_at(pos[0], pos[1], res[0], res[1])
+                            clicked = True
+
+                    if not clicked:
                             time.sleep(0.5)
                 elif state == GameState.FATE_REWARD:
-                    logging.info("!?7??); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("获取命运→确定")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.REST_SCREEN:
-# AUTO-FAILED:                     logging.info("?"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.EVENT_SCREEN:
-#                     logging.info(f"¼{detector.last_template} ?2??); stats["events"] += 1
-                    for _ in range(2):
-                        sim.click_at(588, detector.last_pos[1], res[0], res[1])
-                        time.sleep(0.2)
+                    logging.info("休息")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
+                elif state == GameState.EVENT_SCREEN:
+                    stats["events"] += 1
+                    y = detector.last_pos[1]
+                    for x in (1350, 990, 600):
+                        for _ in range(2):
+                            sim.click_at(x, y, res[0], res[1])
+                            time.sleep(0.2)
                 elif state == GameState.DEATH_SCREEN:
-                    logging.info("??); combat_mod.reset_battle(")
+                    logging.info("死亡")
+                    combat_mod.reset_battle()
                     sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.EXTRACTION:
-# AUTO-FAILED:                     logging.info("!"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.RETREAT:
-                    logging.info("á??); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("提取奖励")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
+                elif state == GameState.RETREAT:
+                    logging.info("设置→脱离")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.REMOVE_CARD_EVENT:
-#                     logging.info("?¼??); _click("remove_card_event"")
-#                 elif state == GameState.CONFIRM_OPTION:
-# AUTO-FAILED:                     logging.info("???ѡ"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.CLOSE_VIEW:
-# AUTO-FAILED:                     logging.info("ر|"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.CONTINUE_FORWARD:
-# AUTO-FAILED:                     logging.info("?"); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
-#                 elif state == GameState.CONFIRM_ACQUIRE:
-#                     logging.info("???á???); _click("confirm_acquire"")
-#                 elif state == GameState.SKIP_LEFTMOST:
+                    logging.info("移除卡牌")
+                    _click("remove_card_event")
+                elif state == GameState.CONFIRM_OPTION:
+                    logging.info("确认弹窗")
+                    _click("confirm_option")
+                elif state == GameState.CLOSE_VIEW:
+                    logging.info("关闭视图")
+                    _click("close_view")
+                elif state == GameState.CONTINUE_FORWARD:
+                    logging.info("继续前进")
+                    _click("continue_forward")
+                elif state == GameState.CONFIRM_ACQUIRE:
+                    logging.info("确认获得")
+                    _click("confirm_acquire")
+                elif state == GameState.SKIP_LEFTMOST:
                     matches = detector.matcher.match_all(frame, "skip_leftmost", threshold=0.8)
                     if matches:
                         _, cx, cy = matches[0]
                         detector.last_pos = (cx, cy)
-                        logging.info(f"??? ({cx},{cy})")
+                        logging.info(f"跳过最左 ({cx},{cy})")
                         _click("skip_leftmost")
                 elif state == GameState.CARD_REWARD_SKIP:
-#                     logging.info("ÿ???); _click("card_reward_skip"")
-#                 elif state == GameState.AUTO_BATTLE_OFF:
-                    logging.info("????ս????????????); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("卡牌跳过")
+                    _click("card_reward_skip")
+                elif state == GameState.AUTO_BATTLE_OFF:
+                    logging.info("关闭自动战斗")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                     self._once.add("auto_battle_off")
                 elif state == GameState.WRONG_PAGE:
-#                     logging.info("????ҳ???); _click("wrong_page"")
-#                 elif state == GameState.DELETE_SAVE:
-                    logging.info("~浵??); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("误入其他页面")
+                    _click("wrong_page")
+                elif state == GameState.DELETE_SAVE:
+                    logging.info("删除存档")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.DREAM_CONFIRM:
-                    logging.info("??#??????); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("梦境确认")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.INSPIRATION_CARD:
-#                     logging.info("п·??); _click("inspiration_card"")
-#                 elif state == GameState.CARD_CONVERT:
-#                     logging.info("???????); _click("card_convert"")
-#                 elif state == GameState.EVENT_DICE:
-                    logging.info("¼ӡ??); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("灵感卡")
+                    _click("inspiration_card")
+                elif state == GameState.CARD_CONVERT:
+                    logging.info("卡牌转换")
+                    _click("card_convert")
+                elif state == GameState.EVENT_DICE:
+                    logging.info("事件骰子")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.DICE_NEXT:
-                    logging.info("?ܡ????); sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1]")
+                    logging.info("骰子下一步")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.SELECT_CHARACTER:
-                    logging.info("ѡ????k???")
+                    logging.info("选择角色")
                     bx, by = detector.last_pos
                     points = [
-                        (bx - 500, by - 250),   # ?? left-500
-                        (bx, by - 250),          # ?? center-250
-                        (bx + 500, by - 250),   # ?? right+500
-                        (bx + 750, by),          # ?? match+750
+                        (bx - 500, by - 250),   # 上左 left-500
+                        (bx, by - 250),          # 上中 center-250
+                        (bx + 500, by - 250),   # 上右 right+500
+                        (bx + 750, by),          # 中 match+750
                     ]
                     for px, py in points:
                         sim.click_at(px, py, res[0], res[1])
@@ -1162,9 +1204,9 @@ class CznZeroFarmGUI:
                     time.sleep(t["screenshot_interval"]); continue
                 time.sleep(t.get("post_click_wait", 1.0))
             except Exception as e:
-                logging.error(f"??: {e}")
+                logging.error(f"运行错误: {e}")
                 time.sleep(2.0)
-        logging.info("=== c??===")
+        logging.info("=== 运行结束 ===")
         self.root.after(0, lambda: self._set_ui_running(False))
         self._running = False
 
