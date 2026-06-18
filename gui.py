@@ -477,7 +477,8 @@ class CznZeroFarmGUI:
         return btn
 
     def _setup_ui(self):
-        # ????        main = tk.Frame(self.root, bg=COLOR_BG)
+        # 主框架
+        main = tk.Frame(self.root, bg=COLOR_BG)
         main.pack(fill=tk.BOTH, expand=True)
         main.pack_propagate(False)
 
@@ -592,7 +593,8 @@ class CznZeroFarmGUI:
                                      bg=COLOR_SIDEBAR, font=("Segoe UI", 9), anchor="w")
         self.status_text.pack(side=tk.LEFT, padx=12)
 
-        # ??״???        self.btn_pause.config(state=tk.DISABLED, bg=COLOR_CARD, fg=COLOR_TEXT_SEC)
+        # 初始化按钮状态
+        self.btn_pause.config(state=tk.DISABLED, bg=COLOR_CARD, fg=COLOR_TEXT_SEC)
         self.btn_stop.config(state=tk.DISABLED, bg=COLOR_CARD, fg=COLOR_TEXT_SEC)
 
         self._setup_hotkeys()
@@ -972,20 +974,21 @@ class CznZeroFarmGUI:
                 if not hasattr(self, '_buff_active'): self._buff_active = False
                 if not hasattr(self, '_buff_done'): self._buff_done = False
 
-                # Buff #?ֻ???? event_option2״??                if self._buff_active:
-#                     found, conf, pos = detector.matcher.match(frame, "event_option2", 0.8)
-#                     if found:
-#                         logging.info(f"Buffevent_option2 2??({conf:.2f})")
-#                         for _ in range(2):
-#                             sim.click_at(588, pos[1], res[0], res[1])
-#                             time.sleep(0.2)
-#                         self._buff_active = False
-#                         self._buff_done = True
-#                     else:
-#                         time.sleep(0.5)
-#                     continue
+                # Buff 模式只匹配 event_option2 状态
+                if self._buff_active:
+                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.8)
+                    if found:
+                        logging.info(f"Buff event_option2 点击2次 ({conf:.2f})")
+                        for _ in range(2):
+                            sim.click_at(588, pos[1], res[0], res[1])
+                            time.sleep(0.2)
+                        self._buff_active = False
+                        self._buff_done = True
+                    else:
+                        time.sleep(0.5)
+                    continue
 
-                # ?#?ֶ??⣬״???4
+                # 法典合成模式
                 if self._codex_active or state == GameState.CODEX_SYNTH:
                     self._codex_active = True
                     clicked = False
