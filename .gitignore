@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.spec
+
+# 项目
+logs/
+debug/
+AGENTS.md
+
+# 临时文件
+*.bak
+*.recovered
+*.recovered2
+*_fixed.py
+*_fixed2.py
+
+# IDE
+.idea/
+.vscode/
+
+# 系统
+.DS_Store
+Thumbs.db

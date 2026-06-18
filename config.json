@@ -1,0 +1,227 @@
+{
+  "_说明": "零式系统自动刷取脚本配置文件",
+  "_坐标说明": "所有坐标均为 (x, y) 像素值，基于 1920x1080 分辨率。不同分辨率请按比例缩放。",
+  "template_profile": "templates_global",
+  "_template_profiles": [
+    "templates_global",
+    "templates_cn"
+  ],
+  "game": {
+    "window_title": "卡厄思梦境",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "capture_method": "auto",
+    "input_backend": "sendinput",
+    "mode": "pc",
+    "mission": "zero_system"
+  },
+  "hotkey": {
+    "stop": "f8",
+    "pause": "f9"
+  },
+  "click_offsets": {
+    "neutral_card_skip": [
+      -60,
+      0
+    ],
+    "remove_card_event": [
+      -40,
+      0
+    ],
+    "confirm_acquire": [
+      30,
+      0
+    ],
+    "card_reward_skip": [
+      -60,
+      0
+    ],
+    "inspiration_card": [
+      0,
+      150
+    ],
+    "card_convert": [
+      -40,
+      0
+    ],
+    "select_character": [
+      0,
+      -120
+    ],
+    "skip_leftmost": [
+      -180,
+      0
+    ],
+    "wrong_page": [
+      -100,
+      0
+    ],
+    "buff_select": [
+      0,
+      0
+    ]
+  },
+  "click_points": {
+    "main_menu_zero_entry": [
+      960,
+      540
+    ],
+    "codex_first": [
+      960,
+      500
+    ],
+    "difficulty_confirm": [
+      960,
+      700
+    ],
+    "enter_confirm": [
+      960,
+      800
+    ],
+    "team_enter": [
+      960,
+      800
+    ],
+    "buff_first": [
+      960,
+      500
+    ],
+    "map_node_default": [
+      960,
+      400
+    ],
+    "end_turn": [
+      1800,
+      950
+    ],
+    "card_play_area": [
+      960,
+      600
+    ],
+    "enemy_target_area": [
+      1400,
+      300
+    ],
+    "reward_confirm": [
+      960,
+      800
+    ],
+    "result_next": [
+      960,
+      700
+    ],
+    "event_choice_first": [
+      960,
+      500
+    ],
+    "rest_heal": [
+      960,
+      600
+    ],
+    "shop_skip": [
+      1700,
+      100
+    ],
+    "run_exit_confirm": [
+      960,
+      700
+    ],
+    "extraction_confirm": [
+      960,
+      800
+    ],
+    "next_floor": [
+      960,
+      700
+    ],
+    "retreat_btn": [
+      100,
+      100
+    ],
+    "buff_first_region": [
+      390,
+      900,
+      500,
+      280
+    ],
+    "event_first_region": [
+      300,
+      500,
+      600,
+      100
+    ]
+  },
+  "card_hand": {
+    "region": [
+      100,
+      880,
+      1720,
+      160
+    ],
+    "play_order": "left_to_right",
+    "num_slots": 7
+  },
+  "combat": {
+    "max_turns_per_battle": 50,
+    "card_play_delay": 0.3,
+    "target_delay": 0.15,
+    "end_turn_delay": 0.5
+  },
+  "map_navigation": {
+    "prefer_elite": false,
+    "prefer_shop": false,
+    "prefer_rest": false,
+    "scan_from_center": true
+  },
+  "timing": {
+    "screenshot_interval": 0.2,
+    "click_delay": 0.1,
+    "post_click_wait": 0.5,
+    "state_check_retries": 1.0,
+    "state_check_interval": 0.2,
+    "between_runs_delay": 1.0
+  },
+  "ocr": {
+    "entry_keywords": [
+      "进入",
+      "进入"
+    ],
+    "keyword": "移除2张所选卡牌",
+    "exit_keywords": [
+      "ESC",
+      "脫逃",
+      "确认"
+    ],
+    "exit_keyword_offsets": [
+      [
+        0,
+        -20
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "buff_region": [
+      100,
+      300,
+      800,
+      300
+    ],
+    "backend": "windows",
+    "buff_ocr_keyword": "在3場一般戰鬥期間怪物的HP變更為1"
+  },
+  "logging": {
+    "log_to_file": true,
+    "debug_screenshots": false
+  },
+  "debug": {
+    "keep_mouse": true
+  }
+}
