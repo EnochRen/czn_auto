@@ -819,9 +819,6 @@ class CznZeroFarmGUI:
         self._buff_active = False
         self._buff_done = False
         self._buff_cooldown = 0.0
-        self._unex_active = False
-        self._unex_done = False
-        self._unex_cooldown = 0.0
         self._once = set()
 
         def _click(tpl_name=None, default_pos=None):
@@ -983,26 +980,6 @@ class CznZeroFarmGUI:
                 if not hasattr(self, '_buff_active'): self._buff_active = False
                 if not hasattr(self, '_buff_done'): self._buff_done = False
                 if not hasattr(self, '_buff_cooldown'): self._buff_cooldown = 0.0
-                if not hasattr(self, '_unex_active'): self._unex_active = False
-                if not hasattr(self, '_unex_done'): self._unex_done = False
-                if not hasattr(self, '_unex_cooldown'): self._unex_cooldown = 0.0
-
-                # 意外房间 mode
-                if self._unex_active:
-                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.9)
-                    if found:
-                        logging.info(f"意外房间 event_option2 点击2次 中间 ({conf:.2f})")
-                        for _ in range(2):
-                            sim.click_at(960, pos[1], res[0], res[1])
-                            time.sleep(0.2)
-                        self._unex_active = False
-                        self._unex_done = True
-                        self._unex_cooldown = time.time() + 5
-                    elif state != GameState.UNEXPECTED_ROOM:
-                        self._unex_active = False
-                    else:
-                        time.sleep(0.5)
-                    continue
 
                 # Buff 模式只匹配 event_option2 状态
                 if self._buff_active:
@@ -1053,8 +1030,6 @@ class CznZeroFarmGUI:
                 if state == GameState.MAIN_MENU:
                     self._buff_done = False
                     self._buff_cooldown = 0.0
-                    self._unex_done = False
-                    self._unex_cooldown = 0.0
                     logging.info("主界面→零式系统")
                     sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.ZERO_SYSTEM_ENTRY:
@@ -1082,19 +1057,15 @@ class CznZeroFarmGUI:
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                     self._buff_active = True
                 elif state == GameState.UNEXPECTED_ROOM:
-                    if self._unex_done:
-                        time.sleep(t["screenshot_interval"]); continue
-                    if time.time() < self._unex_cooldown:
-                        time.sleep(t["screenshot_interval"]); continue
-                    self._unex_done = True
-                    self._unex_cooldown = time.time() + 300
-                    logging.info("意外房间 首次选择")
-                    if "buff_first_region" in cfg.get("click_points", {}):
-                        rx, ry, rw, rh = cfg["click_points"]["buff_first_region"]
-                        sim.click_at(rx + rw // 2, ry + rh // 2, res[0], res[1])
+                    found, conf, pos = detector.matcher.match(frame, "unex_leave", 0.9)
+                    if found:
+                        logging.info(f"意外房间 离开 ({conf:.2f})")
+                        for _ in range(2):
+                            sim.click_at(pos[0], pos[1], res[0], res[1])
+                            time.sleep(0.2)
                     else:
-                        sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
-                    self._unex_active = True
+                        time.sleep(0.5)
+                    continue
                 elif state == GameState.ROOM_SELECT:
                     rooms = [("room_rest", 4), ("room_battle", 1), ("room_event", 2), ("room_elite", 3)]
                     clicked = False
@@ -1107,6 +1078,11 @@ class CznZeroFarmGUI:
                     if not clicked:
                         logging.warning("所有房间没匹配到，点击默认节点")
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
+                elif state == GameState.BOSS_NODE:
+                    logging.info("Boss节点 左偏移150")
+                    for _ in range(2):
+                        sim.click_at(detector.last_pos[0] - 150, detector.last_pos[1] + 50, res[0], res[1])
+                        time.sleep(0.2)
                 elif state == GameState.MAP_SCREEN:
                     logging.info("地图点击默认节点")
                     sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])

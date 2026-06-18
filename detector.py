@@ -53,6 +53,7 @@ class GameState(Enum):
     CODEX_SYNTH = "codex_synth"
     DREAM_CONFIRM = "dream_confirm"
     UNEXPECTED_ROOM = "unexpected_room"
+    BOSS_NODE = "boss_node"
     UNKNOWN = "unknown"
 
 
@@ -147,6 +148,7 @@ class StateDetector:
             ("wrong_page", GameState.WRONG_PAGE),
             ("select_character", GameState.SELECT_CHARACTER),
             ("strong_select", GameState.SELECT_CHARACTER),
+            ("unex_select", GameState.SELECT_CHARACTER),
             ("skip_confirm", GameState.SKIP_CONFIRM),
             ("neutral_card_skip", GameState.NEUTRAL_CARD_SKIP),
             ("result_settle", GameState.RESULT_NEXT),
@@ -168,7 +170,7 @@ class StateDetector:
             ("room_event", GameState.ROOM_SELECT),
             ("room_rest", GameState.ROOM_SELECT),
             ("map_screen", GameState.MAP_SCREEN),
-            ("boss_node", GameState.MAP_SCREEN),
+            ("boss_node", GameState.BOSS_NODE),
             ("team_enter", GameState.TEAM_ENTER),
             ("team_confirm", GameState.TEAM_ENTER),
             ("codex_select", GameState.CODEX_SELECT),
