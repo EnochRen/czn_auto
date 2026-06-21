@@ -67,7 +67,7 @@ class GameState(Enum):
 class TemplateMatcher:
     def __init__(self, templates_dir: Path):
         self.templates: dict[str, np.ndarray] = {}
-        self.threshold = 0.9
+        self.threshold = 0.8
         if templates_dir and templates_dir.exists():
             for f in sorted(templates_dir.rglob("*")):
                 if f.is_file() and f.suffix.lower() in (".png", ".jpg", ".jpeg", ".bmp"):
@@ -235,7 +235,7 @@ class StateDetector:
             if skip_templates and tpl_name in skip_templates:
                 continue
             if self.matcher.exists(tpl_name):
-                th = thresholds.get(tpl_name, 0.9)
+                th = thresholds.get(tpl_name, 0.8)
                 found, conf, pos = self.matcher.match(frame, tpl_name, threshold=th)
                 if found:
                     logger.debug(f"State: {state.value} (conf={conf:.3f})")

@@ -1040,7 +1040,7 @@ class CznZeroFarmGUI:
 
                 # Buff 模式只匹配 event_option2 状态
                 if self._buff_active:
-                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.9)
+                    found, conf, pos = detector.matcher.match(frame, "event_option2", 0.8)
                     if found:
                         logging.info(f"Buff event_option2 点击2次 ({conf:.2f})")
                         for _ in range(2):
@@ -1067,7 +1067,7 @@ class CznZeroFarmGUI:
                         for tpl in ("codex_btn0", "codex_btn1", "codex_btn2", "codex_btn3", "codex_btn4"):
                             if tpl == "codex_btn1" and not cfg.get("codex_use_btn1", True):
                                 continue
-                            found, conf, pos = detector.matcher.match(frame, tpl, 0.9)
+                            found, conf, pos = detector.matcher.match(frame, tpl, 0.8)
                             if found:
                                 if tpl in ("codex_btn3", "codex_btn4"):
                                     logging.info(f"合成 {tpl} ({conf:.2f}) 往上300像素点击")
@@ -1119,7 +1119,7 @@ class CznZeroFarmGUI:
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                     self._buff_active = True
                 elif state == GameState.UNEXPECTED_ROOM:
-                    found, conf, pos = detector.matcher.match(frame, "unex_leave", 0.9)
+                    found, conf, pos = detector.matcher.match(frame, "unex_leave", 0.8)
                     if found:
                         logging.info(f"意外房间 离开 ({conf:.2f})")
                         for _ in range(2):
@@ -1133,7 +1133,7 @@ class CznZeroFarmGUI:
                     rooms = [(r, i) for i, r in enumerate(room_order)] + [("boss_node", 99), ("room_fallback", 100)]
                     clicked = False
                     for name, _ in rooms:
-                        found, conf, pos = detector.matcher.match(frame, name, threshold=0.9)
+                        found, conf, pos = detector.matcher.match(frame, name, threshold=0.8)
                         if found:
                             logging.info(f"{name} ({conf:.2f})")
                             if name == "room_fallback":
@@ -1172,7 +1172,7 @@ class CznZeroFarmGUI:
                 elif state == GameState.RESULT_NEXT:
                     clicked = False
                     for tpl in settlement_tpls:
-                        found, conf, pos = detector.matcher.match(frame, tpl, 0.9)
+                        found, conf, pos = detector.matcher.match(frame, tpl, 0.8)
                         if found:
                             logging.info(f"{tpl} ({conf:.2f})")
                             if tpl == "settlement_confirm":  # 取消选择装备
@@ -1184,7 +1184,7 @@ class CznZeroFarmGUI:
                             clicked = True; break
                     if not clicked:
                         for tpl in ("settle_done_1", "settle_done_2"):
-                            if detector.matcher.exists(tpl) and detector.matcher.match(frame, tpl, 0.9)[0]:
+                            if detector.matcher.exists(tpl) and detector.matcher.match(frame, tpl, 0.8)[0]:
                                 logging.info("")
                                 clicked = True; break
                     if not clicked:
