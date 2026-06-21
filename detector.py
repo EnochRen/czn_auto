@@ -74,11 +74,13 @@ class TemplateMatcher:
                     img = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
                     if img is not None:
                         if len(img.shape) == 3 and img.shape[2] == 4:
-                            # 有 alpha 通道：透明区域填中性灰，消除背景干扰
+                            # 有 alpha 通道：透明区域填前景平均灰，消除背景干扰
                             alpha = img[:, :, 3]
                             bgr = img[:, :, :3]
-                            bgr[alpha == 0] = [128, 128, 128]
-                            img = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+                            gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+                            fg_mean = gray[alpha > 0].mean() if np.any(alpha > 0) else 128.0
+                            gray[alpha == 0] = fg_mean
+                            img = gray
                         elif len(img.shape) == 3:
                             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                         self.templates[f.stem] = img
