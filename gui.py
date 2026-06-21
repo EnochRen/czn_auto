@@ -1226,11 +1226,17 @@ class CznZeroFarmGUI:
                     sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.RETREAT:
                     if detector.last_template == "retreat":
-                        logging.info("撤退")
+                        if not hasattr(self, '_retreat_toggle'):
+                            self._retreat_toggle = 0
                         cx, cy = detector.last_pos
-                        sim.click_at(cx + 390, cy - 930, res[0], res[1])
+                        if self._retreat_toggle % 2 == 0:
+                            logging.info("撤退 点击1(右455)")
+                            sim.click_at(cx + 455, cy, res[0], res[1])
+                        else:
+                            logging.info("撤退 点击2(右596上890)")
+                            sim.click_at(cx + 596, cy - 890, res[0], res[1])
+                        self._retreat_toggle += 1
                         time.sleep(sr_delay)
-                        sim.click_at(cx + 366, cy, res[0], res[1])
                     else:
                         logging.info("设置→脱离")
                         sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
@@ -1240,6 +1246,9 @@ class CznZeroFarmGUI:
                 elif state == GameState.CONFIRM_OPTION:
                     logging.info("确认弹窗")
                     _click("confirm_option")
+                elif state == GameState.CHAOS_CENTER:
+                    logging.info("前往混沌中心")
+                    _click("chaos_center")
                 elif state == GameState.CLOSE_VIEW:
                     logging.info("关闭视图")
                     _click("close_view")
@@ -1284,6 +1293,9 @@ class CznZeroFarmGUI:
                     sim.click_at(cx, cy + 430, res[0], res[1])
                     time.sleep(sr_delay)
                     sim.click_at(cx + 690, cy + 870, res[0], res[1])
+                elif state == GameState.CODEX_CONFIRM:
+                    logging.info("确认图鉴")
+                    sim.click_at(detector.last_pos[0], detector.last_pos[1], res[0], res[1])
                 elif state == GameState.SKIP_LEFTMOST:
                     matches = detector.matcher.match_all(frame, "skip_leftmost", threshold=0.8)
                     if matches:

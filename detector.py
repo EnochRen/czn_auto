@@ -61,6 +61,8 @@ class GameState(Enum):
     UNEXPECTED_ROOM = "unexpected_room"
     BOSS_NODE = "boss_node"
     CODEX_OBTAIN = "codex_obtain"
+    CODEX_CONFIRM = "codex_confirm"
+    CHAOS_CENTER = "chaos_center"
     UNKNOWN = "unknown"
 
 
@@ -148,7 +150,6 @@ class StateDetector:
         }
         checks = [
             ("retreat", GameState.RETREAT),
-            ("retreat_btn", GameState.RETREAT),
             ("auto_battle_off", GameState.AUTO_BATTLE_OFF),
             ("combat_screen", GameState.COMBAT),
             ("combat_victory", GameState.COMBAT_VICTORY),
@@ -198,8 +199,10 @@ class StateDetector:
             ("codex_btn4", GameState.CODEX_SYNTH),
             ("codex_complete", GameState.CODEX_COMPLETE),
             ("codex_complete2", GameState.CODEX_COMPLETE),
+            ("codex_confirm", GameState.CODEX_CONFIRM),
             ("zero_system_entry", GameState.ZERO_SYSTEM_ENTRY),
             ("main_menu", GameState.MAIN_MENU),
+            ("chaos_center", GameState.CHAOS_CENTER),
             ("remove_card_event", GameState.REMOVE_CARD_EVENT),
             ("close_view", GameState.CLOSE_VIEW),
             ("continue_forward", GameState.CONTINUE_FORWARD),
@@ -216,6 +219,7 @@ class StateDetector:
             ("delete_save", GameState.DELETE_SAVE),
             ("settlement_confirm", GameState.RESULT_NEXT),  # 取消选择装备
             ("dream_confirm", GameState.DREAM_CONFIRM),
+            ("retreat_btn", GameState.RETREAT),  # 脱逃按钮，优先级低于confirm/dream
             ("buff_select", GameState.BUFF_SELECT),
             ("unexpected_room", GameState.UNEXPECTED_ROOM),
             ("bug_close", GameState.BUG_CLOSE),
