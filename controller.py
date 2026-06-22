@@ -60,8 +60,12 @@ class InputSimulator:
 
     def _find_window(self):
         import json
+        import sys
         from pathlib import Path
-        cfg_path = Path(__file__).parent / "config.json"
+        if getattr(sys, "frozen", False):
+            cfg_path = Path(sys.executable).parent / "config.json"
+        else:
+            cfg_path = Path(__file__).parent / "config.json"
         if cfg_path.exists():
             with open(cfg_path, encoding="utf-8") as f:
                 cfg = json.load(f)
