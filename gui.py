@@ -34,7 +34,7 @@ def imwrite_unicode(path, img):
     return False
 sys.path.insert(0, str(BASE_DIR))
 
-from controller import InputSimulator
+from core.input import InputSimulator
 from detector import TemplateMatcher, StateDetector, GameState
 from combat import CombatModule
 from core.screencap import AVAILABLE_METHODS, CaptureMethod, ScreenCapturer
