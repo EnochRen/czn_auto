@@ -8,7 +8,6 @@ import logging
 import threading
 import time
 
-import cv2
 from PySide6.QtCore import QThread, Signal
 
 from core.combat import CombatModule
@@ -20,6 +19,7 @@ from core.window import get_selected_device, resolve_hwnd
 
 from .config_manager import ConfigManager
 from .constants import BASE_DIR, DEBUG_DIR
+from .tools import _imwrite_unicode
 
 
 class _SC:
@@ -617,7 +617,7 @@ class AutomationWorker(QThread):
                 else:
                     logging.info(f"OCR原文: {all_text[:120]!r}")
                     DEBUG_DIR.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(str(DEBUG_DIR / "buff_scan_fail.png"), frame)
+                    _imwrite_unicode(DEBUG_DIR / "buff_scan_fail.png", frame)
                     logging.info(f"已保存 {DEBUG_DIR / 'buff_scan_fail.png'}")
         if pos:
             logging.info(f"找到目标Buff: {kw}")
