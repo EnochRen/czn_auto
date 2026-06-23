@@ -133,7 +133,7 @@ class DiagnoseService:
         else:
             logging.info(f"   未找到窗口 [{title}]，请确认窗口标题")
 
-        frame = cap.capture()
+        frame = cap.capture_game_area()
         res = cap.get_resolution()
         DEBUG_DIR.mkdir(parents=True, exist_ok=True)
         ts = datetime.datetime.now().strftime("%H%M%S")

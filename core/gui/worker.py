@@ -14,6 +14,7 @@ from PySide6.QtCore import QThread, Signal
 
 from core.combat import CombatModule
 from core.input import InputSimulator
+from core.keepawake import KeepAwake
 from core.screencap import CaptureMethod, ScreenCapturer
 from core.matcher import GameState, StateDetector, TemplateMatcher, load_pixel_checks
 
@@ -121,6 +122,10 @@ class AutomationWorker(QThread):
 
         logging.info(f"=== 开始运行 [配置: {tdir.name}] ===")
 
+        keep_awake = KeepAwake()
+        if g.get("prevent_lock", True):
+            keep_awake.enable()
+
         while not self._stop_evt.is_set():
             if self._pause_evt.is_set():
                 time.sleep(0.3)
@@ -215,6 +220,7 @@ class AutomationWorker(QThread):
                 logging.error(f"运行错误: {e}")
                 time.sleep(2.0)
 
+        keep_awake.disable()
         logging.info("=== 运行结束 ===")
 
     # ---- 状态分发（零式系统）----
@@ -291,7 +297,8 @@ class AutomationWorker(QThread):
             logging.info("地图点击默认节点")
             click_last()
         elif state == GS.COMBAT:
-            combat_mod.execute_turn(frame, res, sim, sc)
+            # 战斗交由游戏自身处理，状态机仅等待，不做任何操作
+            time.sleep(t["screenshot_interval"])
         elif state == GS.COMBAT_VICTORY:
             logging.info("战斗胜利")
             stats["battles"] += 1
@@ -416,9 +423,9 @@ class AutomationWorker(QThread):
         elif state == GS.CARD_REWARD_SKIP:
             logging.info("卡牌跳过")
             _click("card_reward_skip")
-        elif state == GS.AUTO_BATTLE_OFF:
-            logging.info("关闭自动战斗")
-            click_last()
+        elif state == GS.COMBAT_WITHOUT_AUTO:
+            logging.info("战斗未开自动 → 点击开启自动")
+            sim.click_at(int(0.8792 * res[0]), int(0.0519 * res[1]), res[0], res[1])
         elif state == GS.WRONG_PAGE:
             logging.info("误入其他页面")
             _click("wrong_page")
