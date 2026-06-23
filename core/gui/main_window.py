@@ -50,7 +50,6 @@ class MainWindow(FluentWindow):
         self.home.stopRequested.connect(self.stop_run)
         self.home.captureRequested.connect(self.start_capture)
         self.home.diagnoseRequested.connect(self.start_diagnose)
-        self.home.quickChanged.connect(self.settings.sync_quick)
         self.settings.saved.connect(self._on_settings_saved)
 
     def _setup_logging(self):

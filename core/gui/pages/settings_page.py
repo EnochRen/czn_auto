@@ -18,8 +18,8 @@ from core.screencap import AVAILABLE_METHODS, CaptureMethod
 from ..config_manager import ConfigManager
 from ..constants import (
     CLICK_DESCS, CLICK_TIPS, COMBAT_FIELDS, COMBAT_LABELS, COMBAT_TIPS,
-    INPUT_BACKEND_DISPLAY, MISSION_DISPLAY, MODE_DISPLAY, PROFILE_TO_SERVER,
-    ROOM_NAMES, SERVER_TO_PROFILE, TIMING_FIELDS, TIMING_LABELS, TIMING_TIPS,
+    INPUT_BACKEND_DISPLAY, MODE_DISPLAY,
+    ROOM_NAMES, TIMING_FIELDS, TIMING_LABELS, TIMING_TIPS,
 )
 
 _ROOM_KEY = Qt.ItemDataRole.UserRole
@@ -125,20 +125,7 @@ class SettingsPage(QScrollArea):
     def _build_general(self):
         d = self.cfg.data
         g = d.get("game", {})
-        sec = _Section("服务器与平台")
-
-        self.server_combo = _combo(
-            list(SERVER_TO_PROFILE.keys()),
-            PROFILE_TO_SERVER.get(self.cfg.profile, "国际服"),
-        )
-        sec.add("当前服务器", self.server_combo)
-
-        self.mission_combo = _combo(
-            list(MISSION_DISPLAY.values()),
-            MISSION_DISPLAY.get(g.get("mission", "zero_system"), "零式系统"),
-            tip="零式系统：自动刷层\n赛季图初始刷取：OCR 匹配关键词直选退出",
-        )
-        sec.add("刷取模式", self.mission_combo, "切换零式系统 / 赛季图初始刷取")
+        sec = _Section("平台与运行")
 
         self.mode_combo = _combo(
             list(MODE_DISPLAY.values()),
@@ -170,6 +157,11 @@ class SettingsPage(QScrollArea):
         self.sw_retreat = SwitchButton()
         self.sw_retreat.setChecked(g.get("retreat_on_first_floor", False))
         sec.add("仅推一层后撤退", self.sw_retreat)
+
+        self.sw_prevent_lock = SwitchButton()
+        self.sw_prevent_lock.setChecked(g.get("prevent_lock", True))
+        sec.add("运行时防锁屏", self.sw_prevent_lock,
+                "运行期间阻止显示器休眠/屏保自动锁屏（无法绕过强制锁屏策略）")
 
         self._root.addWidget(sec)
 
@@ -304,12 +296,6 @@ class SettingsPage(QScrollArea):
         self._root.addLayout(bar)
 
     # ---- 行为 ----
-    def sync_quick(self):
-        """首页切换服务器/模式后，同步设置页对应下拉框（不触发保存）。"""
-        self.server_combo.setCurrentText(PROFILE_TO_SERVER.get(self.cfg.profile, "国际服"))
-        mission = self.cfg.data.get("game", {}).get("mission", "zero_system")
-        self.mission_combo.setCurrentText(MISSION_DISPLAY.get(mission, "零式系统"))
-
     def _move_room(self, delta):
         row = self.room_list.currentRow()
         if row < 0:
@@ -325,13 +311,12 @@ class SettingsPage(QScrollArea):
         d = self.cfg.data
         g = d.setdefault("game", {})
 
-        d["template_profile"] = SERVER_TO_PROFILE.get(self.server_combo.currentText(), "templates_global")
-        g["mission"] = self._reverse(MISSION_DISPLAY, self.mission_combo.currentText(), "zero_system")
         g["mode"] = self._reverse(MODE_DISPLAY, self.mode_combo.currentText(), "pc")
         g["input_backend"] = self._reverse(INPUT_BACKEND_DISPLAY, self.input_combo.currentText(), "sendinput")
         g["capture_method"] = self._reverse(AVAILABLE_METHODS, self.capture_combo.currentText(),
                                             CaptureMethod.DEFAULT.value)
         g["retreat_on_first_floor"] = self.sw_retreat.isChecked()
+        g["prevent_lock"] = self.sw_prevent_lock.isChecked()
         d.setdefault("debug", {})["keep_mouse"] = self.sw_keep_mouse.isChecked()
         d["codex_use_btn1"] = self.sw_codex.isChecked()
 
