@@ -10,10 +10,20 @@
 - ``screencap(serial)``: 截屏 -> BGR ndarray
 - ``tap(serial, x, y)``: 模拟点击
 """
-from .client import adb_path, list_devices, run, screencap, tap
+from .client import (
+    DEFAULT_EMULATOR_PORTS,
+    adb_path,
+    connect_emulators,
+    list_devices,
+    run,
+    screencap,
+    tap,
+)
 
 __all__ = [
+    "DEFAULT_EMULATOR_PORTS",
     "adb_path",
+    "connect_emulators",
     "list_devices",
     "run",
     "screencap",

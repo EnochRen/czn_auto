@@ -19,8 +19,9 @@ class AdbDeviceProvider(WindowProvider):
     label = "ADB设备"
 
     def discover(self) -> List[WindowTarget]:
+        # 先探测常见模拟器端口并自动 adb connect，使未连接的模拟器也能枚举出来
         targets: List[WindowTarget] = []
-        for serial in adb.list_devices():
+        for serial in adb.list_devices(connect_emulators_first=True):
             targets.append(
                 WindowTarget(
                     hwnd=0,

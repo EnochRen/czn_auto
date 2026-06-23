@@ -7,8 +7,10 @@
 开发态指向项目根，打包态优先用 ``sys._MEIPASS``。
 """
 import logging
+import socket
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import List, Optional
 
@@ -17,6 +19,16 @@ import numpy as np
 
 # CreateProcess 标志：不弹出控制台窗口
 _CREATE_NO_WINDOW = 0x08000000
+
+# 常见模拟器 adb 端口（需 ``adb connect`` 后才会出现在 ``adb devices``）。
+# 涵盖 5550-5585 连续段（AVD/雷电/通用）+ 各家模拟器默认端口。
+DEFAULT_EMULATOR_PORTS: List[int] = sorted({
+    *range(5550, 5586),  # 通用：AVD(5555) / 雷电(5555,5557…) / 多开
+    7555,                # MuMu / 网易
+    16384,               # MuMu Pro / MuMu12
+    21503,               # MEmu 逍遥
+    62001, 62025, 62026,  # Nox 夜神
+})
 
 
 def _base_dirs() -> List[Path]:
@@ -69,8 +81,54 @@ def run(args, serial: Optional[str] = None, timeout: int = 15) -> Optional[subpr
         return None
 
 
-def list_devices() -> List[str]:
-    """枚举处于 ``device`` 状态的设备 serial。"""
+def _port_open(host: str, port: int, timeout: float = 0.15) -> bool:
+    """快速探测 TCP 端口是否可连接（避免对关闭端口执行慢速 adb connect）。"""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def connect_emulators(ports: Optional[List[int]] = None, host: str = "127.0.0.1") -> List[str]:
+    """探测常见模拟器端口并 ``adb connect``，返回成功连接的地址列表。
+
+    先并发做 TCP 探活，只对开放端口执行 ``adb connect``，避免对关闭端口逐个等待。
+    """
+    ports = ports or DEFAULT_EMULATOR_PORTS
+
+    open_ports: List[int] = []
+    try:
+        with ThreadPoolExecutor(max_workers=16) as ex:
+            for port, ok in zip(ports, ex.map(lambda p: _port_open(host, p), ports)):
+                if ok:
+                    open_ports.append(port)
+    except Exception as e:
+        logging.debug(f"[adb] 端口探测异常: {e}")
+        return []
+
+    connected: List[str] = []
+    for port in open_ports:
+        addr = f"{host}:{port}"
+        cp = run(["connect", addr], timeout=5)
+        if cp is None:
+            continue
+        out = (cp.stdout or b"").decode("utf-8", "ignore").lower()
+        if "connected" in out:  # 命中 "connected to" / "already connected to"
+            connected.append(addr)
+    if connected:
+        logging.info(f"[adb] 已连接模拟器: {', '.join(connected)}")
+    return connected
+
+
+def list_devices(connect_emulators_first: bool = False) -> List[str]:
+    """枚举处于 ``device`` 状态的设备 serial。
+
+    ``connect_emulators_first=True`` 时先探测常见模拟器端口并自动连接，
+    再枚举（供首页刷新使用，让未 connect 的模拟器也能出现）。
+    """
+    if connect_emulators_first:
+        connect_emulators()
     cp = run(["devices"])
     if cp is None:
         return []
