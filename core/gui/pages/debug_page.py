@@ -56,6 +56,7 @@ def diagnose_frame(cfg: ConfigManager, frame: np.ndarray) -> dict:
     for rule in checker.rules:
         hit, _ = checker.match(frame, rule)
         pts: list[dict] = []
+        hit_points: list[tuple[int, int, bool]] = []
         for p in rule.points:
             px = int(p.rx * fw)
             py = int(p.ry * fh)
@@ -71,7 +72,10 @@ def diagnose_frame(cfg: ConfigManager, frame: np.ndarray) -> dict:
                 "rx": p.rx, "ry": p.ry, "oob": False, "ok": ok, "tol": p.tol,
                 "expected": (tr, tg, tb), "actual": (r, g, b), "delta": (dr, dg, db),
             })
-            rule_points.append((px, py, ok))
+            hit_points.append((px, py, ok))
+        # 仅在该规则命中时，才把它的点叠加到画面上
+        if hit:
+            rule_points.extend(hit_points)
         checks.append({"state": rule.state.value, "mode": rule.mode, "hit": hit, "points": pts})
 
     try:
@@ -120,7 +124,7 @@ class ClickableImageView(QWidget):
         self._frame: np.ndarray | None = None   # BGR
         self._qimg: QImage | None = None
         self._points: list[tuple[int, int, QColor]] = []  # 原图坐标 + 颜色
-        self._rule_points: list[tuple[int, int, bool]] = []  # 像素规则点 + 是否通过
+        self._rule_points: list[tuple[int, int, bool]] = []  # 命中规则的像素点 + 是否通过
         self._draw_rect = QRect()  # 当前图像在控件中的绘制区域
 
     @property
@@ -171,7 +175,7 @@ class ClickableImageView(QWidget):
         iw, ih = self._qimg.width(), self._qimg.height()
         scale = self._draw_rect.width() / iw if iw else 1
 
-        # 叠加像素规则点（绿=通过 / 红=不通过）
+        # 仅叠加命中规则的像素点（绿=通过 / 红=不通过）
         for ix, iy, ok in self._rule_points:
             sx = self._draw_rect.x() + int(ix * scale)
             sy = self._draw_rect.y() + int(iy * scale)
