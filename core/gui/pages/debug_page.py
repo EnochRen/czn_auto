@@ -6,6 +6,7 @@
 - 调试像素点：点击「捕获画面」即时抓取最新游戏画面并尽量大地显示，
   之后在图上点击多个像素点，逐条收集（相对坐标 rx/ry + RGB + hex）。
 """
+import json
 import logging
 
 import cv2
@@ -13,8 +14,8 @@ import numpy as np
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
-    QFrame, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton,
-    QSizePolicy, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QPushButton, QSizePolicy, QTabWidget, QTextEdit, QVBoxLayout, QWidget,
 )
 from qfluentwidgets import FluentIcon
 
@@ -22,6 +23,7 @@ from core.matcher import StateDetector, TemplateMatcher, load_pixel_checks
 from core.matcher.pixel import PixelChecker
 
 from ..config_manager import ConfigManager
+from ..constants import PIXEL_DEBUGGER_PATH
 from ..theme import Palette
 from ..tools import grab_game_frame
 
@@ -221,6 +223,7 @@ class PixelDebugTab(QWidget):
         super().__init__(parent)
         self.cfg = cfg
         self._grabber: _FrameGrabber | None = None
+        self._samples: list[dict] = []  # 已采样点：[{rx, ry, rgb:[r,g,b]}]
         self._build_ui()
 
     def _build_ui(self):
@@ -283,6 +286,19 @@ class PixelDebugTab(QWidget):
         self.list = QListWidget(panel)
         self.list.setIconSize(QSize(18, 18))
         pv.addWidget(self.list, 1)
+
+        out_bar = QHBoxLayout()
+        out_bar.setSpacing(8)
+        self.state_input = QLineEdit(panel)
+        self.state_input.setPlaceholderText("输入 state 名称")
+        self.state_input.setMinimumHeight(34)
+        out_bar.addWidget(self.state_input, 1)
+        self.btn_export = _btn("输出", FluentIcon.SAVE, "primary", panel)
+        self.btn_export.setMinimumHeight(34)
+        self.btn_export.clicked.connect(self._export)
+        out_bar.addWidget(self.btn_export)
+        pv.addLayout(out_bar)
+
         body.addWidget(panel)
         root.addLayout(body, 1)
 
@@ -303,6 +319,7 @@ class PixelDebugTab(QWidget):
         self.btn_capture.setText("捕获画面")
         self.view.set_frame(frame)
         self.list.clear()
+        self._samples.clear()
         h, w = frame.shape[:2]
         tag = "" if found else "（未找到游戏窗口，使用整屏/空帧）"
         self.res_label.setText(f"画面 {w}x{h} {tag}")
@@ -353,6 +370,7 @@ class PixelDebugTab(QWidget):
     def _clear(self):
         self.view.clear_points()
         self.list.clear()
+        self._samples.clear()
 
     def _on_point(self, rx: float, ry: float, r: int, g: int, b: int):
         idx = self.list.count() + 1
@@ -365,7 +383,48 @@ class PixelDebugTab(QWidget):
         item.setIcon(swatch)
         self.list.addItem(item)
         self.list.scrollToBottom()
+        self._samples.append({"rx": round(rx, 4), "ry": round(ry, 4), "rgb": [r, g, b]})
         logging.info(f"采样#{idx}: rx={rx:.4f} ry={ry:.4f} RGB({r},{g},{b}) {hex_str}")
+
+    def _export(self):
+        """把当前采样点以 {state, points} 追加写入 pixel_debugger.json。"""
+        state = self.state_input.text().strip()
+        if not state:
+            self.res_label.setText("请先输入 state 名称")
+            logging.warning("输出像素规则: 未填写 state 名称")
+            return
+        if not self._samples:
+            self.res_label.setText("没有可输出的采样点")
+            logging.warning("输出像素规则: 采样点为空")
+            return
+
+        path = PIXEL_DEBUGGER_PATH
+        data: list = []
+        if path.exists():
+            try:
+                loaded = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(loaded, list):
+                    data = loaded
+            except Exception as e:  # noqa: BLE001 - 调试用，损坏则覆盖
+                logging.warning(f"输出像素规则: 读取已存在文件失败，将重建 {e}")
+
+        entry = {
+            "state": state,
+            "mode": "all",
+            "points": [dict(p) for p in self._samples],
+        }
+        data.append(entry)
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:  # noqa: BLE001 - 调试用
+            self.res_label.setText("写入失败")
+            logging.error(f"输出像素规则: 写入失败 {e}")
+            return
+        self.res_label.setText(f"已输出 [{state}] {len(self._samples)} 点")
+        logging.info(
+            f"输出像素规则: 已追加 state=[{state}] {len(self._samples)} 点 -> {path.name}"
+        )
 
 
 class DebugPage(QWidget):

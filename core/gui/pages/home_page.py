@@ -6,7 +6,7 @@ import logging
 import time
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget,
 )
@@ -27,7 +27,13 @@ _LEVEL_COLORS = {
 def _btn(text, icon=None, kind=None, parent=None):
     b = QPushButton(text, parent)
     if icon is not None:
-        b.setIcon(icon.icon())
+        if kind == "primary":
+            icon_color = QColor(Palette.PRIMARY_TEXT)   # 近白底 → 深色图标
+        elif kind == "danger":
+            icon_color = QColor("#ffffff")
+        else:
+            icon_color = QColor(Palette.TEXT)           # 深色底 → 浅色图标
+        b.setIcon(icon.icon(color=icon_color))
     if kind:
         b.setProperty("kind", kind)
     b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -59,8 +65,6 @@ class HomePage(QWidget):
     startRequested = Signal()
     pauseRequested = Signal()
     stopRequested = Signal()
-    captureRequested = Signal()
-    diagnoseRequested = Signal()
     quickChanged = Signal()  # 服务器/模式 在首页被切换
 
     def __init__(self, cfg_mgr: ConfigManager, parent=None):
@@ -116,21 +120,14 @@ class HomePage(QWidget):
         self.btn_start = _btn("开始运行 (F6)", FluentIcon.PLAY, "primary", self)
         self.btn_pause = _btn("暂停 (F9)", FluentIcon.PAUSE, None, self)
         self.btn_stop = _btn("停止 (F8)", FluentIcon.CLOSE, "danger", self)
-        self.btn_capture = _btn("模板采集", FluentIcon.CAMERA, "ghost", self)
-        self.btn_diagnose = _btn("诊断", FluentIcon.DEVELOPER_TOOLS, "ghost", self)
         self.btn_start.clicked.connect(self.startRequested)
         self.btn_pause.clicked.connect(self.pauseRequested)
         self.btn_stop.clicked.connect(self.stopRequested)
-        self.btn_capture.clicked.connect(self.captureRequested)
-        self.btn_diagnose.clicked.connect(self.diagnoseRequested)
-        for b in (self.btn_start, self.btn_pause, self.btn_stop, self.btn_capture, self.btn_diagnose):
+        for b in (self.btn_start, self.btn_pause, self.btn_stop):
             b.setMinimumHeight(40)
         ctrl.addWidget(self.btn_start)
         ctrl.addWidget(self.btn_pause)
         ctrl.addWidget(self.btn_stop)
-        ctrl.addSpacing(12)
-        ctrl.addWidget(self.btn_capture)
-        ctrl.addWidget(self.btn_diagnose)
         ctrl.addStretch(1)
         self.status_dot = QLabel("●", self)
         self.status_label = QLabel("已停止", self)

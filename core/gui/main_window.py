@@ -10,7 +10,6 @@ from .config_manager import ConfigManager
 from .constants import WINDOW_TITLE
 from .logging_bridge import QtLogHandler, install_logging
 from .pages import DebugPage, HomePage, SettingsPage
-from .tools import CaptureService, DiagnoseService
 from .worker import AutomationWorker
 
 
@@ -26,8 +25,6 @@ class MainWindow(FluentWindow):
         super().__init__()
         self.cfg = ConfigManager()
         self.worker: AutomationWorker | None = None
-        self._capture = CaptureService(self.cfg)
-        self._diagnose = DiagnoseService(self.cfg)
 
         self.home = HomePage(self.cfg, self)
         self.settings = SettingsPage(self.cfg, self)
@@ -48,8 +45,6 @@ class MainWindow(FluentWindow):
         self.home.startRequested.connect(self.start_run)
         self.home.pauseRequested.connect(self.toggle_pause)
         self.home.stopRequested.connect(self.stop_run)
-        self.home.captureRequested.connect(self.start_capture)
-        self.home.diagnoseRequested.connect(self.start_diagnose)
         self.settings.saved.connect(self._on_settings_saved)
 
     def _setup_logging(self):
@@ -107,15 +102,6 @@ class MainWindow(FluentWindow):
     def _on_worker_finished(self):
         self.home.stop_timer()
         self.home.set_running_ui(False, False)
-
-    # ---- 工具 ----
-    def start_capture(self):
-        self.cfg.reload()
-        self._capture.start()
-
-    def start_diagnose(self):
-        self.cfg.reload()
-        self._diagnose.run()
 
     def _on_settings_saved(self):
         self.home.refresh_quick()

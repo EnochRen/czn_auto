@@ -13,6 +13,7 @@ else:
 CONFIG_PATH = BASE_DIR / "config.json"
 LOGS_DIR = BASE_DIR / "logs"
 DEBUG_DIR = BASE_DIR / "debug"
+PIXEL_DEBUGGER_PATH = BASE_DIR / "templates_colors" / "pixel_debugger.json"
 
 WINDOW_TITLE = "CZN Zero Farm - 零式系统自动刷取"
 
