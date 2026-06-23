@@ -368,6 +368,9 @@ class AutomationWorker(QThread):
         elif state == GS.CONFIRM_ORANGE:
             logging.info("橙色确认")
             click_last()
+        elif state == GS.BOSS_ROOM:
+            logging.info("Boss房")
+            click_last()
         elif state == GS.CONTINUE_ORANGE:
             logging.info("橙色继续")
             click_last()
