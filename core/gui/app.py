@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""应用入口：高 DPI 适配、Fluent 暗色主题、创建主窗口并进入事件循环。"""
-import ctypes
+"""应用入口：Fluent 暗色主题、创建主窗口并进入事件循环。
+
+高 DPI 不手动设置：Qt6 默认即启用高 DPI 缩放并把进程设为
+``DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2``。若在 QApplication 之前再用
+ctypes 抢先设置，会与 Qt 冲突并触发 "SetProcessDpiAwarenessContext failed: 拒绝访问"，
+故交由 Qt 自行处理。
+"""
 import sys
 
 
-def _enable_dpi_awareness():
-    try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)
-    except Exception:
-        try:
-            ctypes.windll.user32.SetProcessDPIAware()
-        except Exception:
-            pass
-
-
 def run():
-    _enable_dpi_awareness()
-
     from PySide6.QtWidgets import QApplication
 
     from .theme import apply_theme
