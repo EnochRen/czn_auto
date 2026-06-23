@@ -378,6 +378,9 @@ class AutomationWorker(QThread):
         elif state == GS.CONFIRM_ORANGE:
             logging.info("橙色确认")
             click_last()
+        elif state == GS.GAME_SETTLED:
+            logging.info("游戏完成弹窗")
+            click_last()
         elif state == GS.CONFIRM_EXTRACT:
             logging.info("提炼")
             click_last()
