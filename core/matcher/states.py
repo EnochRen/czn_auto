@@ -35,7 +35,7 @@ class GameState(Enum):
     CONFIRM_ACQUIRE = "confirm_acquire"
     SKIP_LEFTMOST = "skip_leftmost"
     CARD_REWARD_SKIP = "card_reward_skip"
-    AUTO_BATTLE_OFF = "auto_battle_off"
+    COMBAT_WITHOUT_AUTO = "combat_without_auto"
     INSPIRATION_CARD = "inspiration_card"
     CARD_CONVERT = "card_convert"
     EVENT_DICE = "event_dice"

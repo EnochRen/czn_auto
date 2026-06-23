@@ -15,7 +15,6 @@ DEFAULT_THRESHOLD = 0.8
 
 # 特定模板的自定义阈值（默认 0.8）
 TEMPLATE_THRESHOLDS: dict[str, float] = {
-    "auto_battle_off": 0.95,
     "wrong_page": 0.98,
     "codex_btn3": 0.95,
 }
@@ -23,7 +22,6 @@ TEMPLATE_THRESHOLDS: dict[str, float] = {
 # 有序模板检查：靠前优先级更高
 STATE_CHECKS: List[Tuple[str, GameState]] = [
     ("retreat", GameState.RETREAT),
-    ("auto_battle_off", GameState.AUTO_BATTLE_OFF),
     ("combat_screen", GameState.COMBAT),
     ("combat_victory", GameState.COMBAT_VICTORY),
     ("codex_obtain", GameState.CODEX_OBTAIN),

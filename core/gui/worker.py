@@ -297,7 +297,8 @@ class AutomationWorker(QThread):
             logging.info("地图点击默认节点")
             click_last()
         elif state == GS.COMBAT:
-            combat_mod.execute_turn(frame, res, sim, sc)
+            # 战斗交由游戏自身处理，状态机仅等待，不做任何操作
+            time.sleep(t["screenshot_interval"])
         elif state == GS.COMBAT_VICTORY:
             logging.info("战斗胜利")
             stats["battles"] += 1
@@ -422,9 +423,9 @@ class AutomationWorker(QThread):
         elif state == GS.CARD_REWARD_SKIP:
             logging.info("卡牌跳过")
             _click("card_reward_skip")
-        elif state == GS.AUTO_BATTLE_OFF:
-            logging.info("关闭自动战斗")
-            click_last()
+        elif state == GS.COMBAT_WITHOUT_AUTO:
+            logging.info("战斗未开自动 → 点击开启自动")
+            sim.click_at(int(0.8792 * res[0]), int(0.0519 * res[1]), res[0], res[1])
         elif state == GS.WRONG_PAGE:
             logging.info("误入其他页面")
             _click("wrong_page")

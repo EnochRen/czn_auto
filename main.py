@@ -195,8 +195,7 @@ def handle_state(state: GameState, frame, res, sim, combat_mod: CombatModule, st
         time.sleep(timing["post_click_wait"])
 
     elif state == GameState.COMBAT:
-        logging.info(f"State: COMBAT (turn {combat_mod.turn_count + 1})")
-        combat_mod.execute_turn(frame, res, sim, config)
+        # 战斗交由游戏自身处理，状态机仅等待，不做任何操作
         time.sleep(timing.get("screenshot_interval", 0.5))
 
     elif state == GameState.COMBAT_VICTORY:
