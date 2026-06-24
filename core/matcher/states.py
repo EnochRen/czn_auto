@@ -68,4 +68,5 @@ class GameState(Enum):
     EVENT_SKIP = "event_skip"
     COPY_CARD_CHOICE = "copy_card_choice"
     EVENT_CHOICE_DOUBLE = "event_choice_double"
+    CHARACTER_CHOICE_BLOCK = "character_choice_block"
     UNKNOWN = "unknown"

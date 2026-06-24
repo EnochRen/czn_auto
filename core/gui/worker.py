@@ -409,6 +409,11 @@ class AutomationWorker(QThread):
             for _ in range(5):
                 sim.click_at(int(0.63 * res[0]), int(0.83 * res[1]), res[0], res[1])
                 time.sleep(0.3)
+        elif state == GS.CHARACTER_CHOICE_BLOCK:
+            logging.info("角色选择阻塞 上中下各点一次")
+            for ry in (0.75, 0.5, 0.3):
+                sim.click_at(int(0.5 * res[0]), int(ry * res[1]), res[0], res[1])
+                time.sleep(0.3)
         elif state == GS.CLOSE_VIEW:
             logging.info("关闭视图")
             _click("close_view")
