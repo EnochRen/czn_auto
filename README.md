@@ -10,6 +10,8 @@
 基于 **OpenCV 模板匹配 + 状态机** 的纯视觉自动化脚本，无需 AI 模型、无需 GPU。
 通过截图识别游戏画面状态，按配置坐标自动点击，实现零式系统全流程无人值守刷取。支持 **国服 / 国际服** 双版本。
 
+![运行界面演示](docs/screenshot.png)
+
 ## 核心特性
 
 | 能力 | 说明 |
@@ -26,16 +28,7 @@
 
 ## 工作原理
 
-```mermaid
-flowchart LR
-    A["屏幕捕获后端<br/>FramePool / PrintWindow / DXGI"] -->|截图| B["状态检测器<br/>模板匹配 + 像素点校验"]
-    B -->|识别| C["GameState<br/>49 个游戏状态"]
-    C -->|状态分发| D["click_points<br/>config.json 坐标"]
-    D -->|坐标缩放| E["输入后端<br/>PostMessage / SendMessage / SendInput"]
-    E -->|点击| A
-```
-
-截屏 → 识别 `GameState` → 按状态查 `config.json` 坐标 → 点击。坐标基于 1920×1080，运行时按实际窗口分辨率自动缩放。
+截屏 → 识别当前画面状态 → 按 `config.json` 配置坐标点击，循环执行。
 
 ## 系统要求
 
