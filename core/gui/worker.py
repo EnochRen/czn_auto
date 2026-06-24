@@ -21,6 +21,20 @@ from .config_manager import ConfigManager
 from .constants import BASE_DIR, DEBUG_DIR
 from .tools import _imwrite_unicode
 
+# 坐标基准：所有写死的像素值/偏移量均以 1920x1080 为参照，
+# 运行时按实际分辨率等比缩放，避免在非 1080p 客户区下点偏。
+BASE_W, BASE_H = 1920, 1080
+
+
+def _rel_x(px, res):
+    """把基于 1920 基准宽度的像素值，按实际分辨率宽度等比缩放为相对坐标。"""
+    return int(round(px * res[0] / BASE_W))
+
+
+def _rel_y(px, res):
+    """把基于 1080 基准高度的像素值，按实际分辨率高度等比缩放为相对坐标。"""
+    return int(round(px * res[1] / BASE_H))
+
 
 class _SC:
     """战斗模块所需的轻量配置载体（兼容旧 _worker 的鸭子类型）。"""
@@ -119,7 +133,8 @@ class AutomationWorker(QThread):
         def _click(tpl_name=None, default_pos=None):
             pos = default_pos or detector.last_pos
             if tpl_name and tpl_name in offsets:
-                pos = (pos[0] + offsets[tpl_name][0], pos[1] + offsets[tpl_name][1])
+                pos = (pos[0] + _rel_x(offsets[tpl_name][0], res),
+                       pos[1] + _rel_y(offsets[tpl_name][1], res))
             sim.click_at(pos[0], pos[1], res[0], res[1])
 
         retreat_on_first = g.get("retreat_on_first_floor", False)
@@ -174,7 +189,7 @@ class AutomationWorker(QThread):
                     if found:
                         logging.info(f"Buff event_option2 点击2次 ({conf:.2f})")
                         for _ in range(2):
-                            sim.click_at(588, pos[1], res[0], res[1])
+                            sim.click_at(_rel_x(588, res), pos[1], res[0], res[1])
                             time.sleep(0.2)
                         self._buff_active = False
                         self._buff_done = True
@@ -201,7 +216,7 @@ class AutomationWorker(QThread):
                             if found:
                                 if tpl in ("codex_btn3", "codex_btn4"):
                                     logging.info(f"合成 {tpl} ({conf:.2f}) 往上300像素点击")
-                                    sim.click_at(pos[0], pos[1] - 300, res[0], res[1])
+                                    sim.click_at(pos[0], pos[1] - _rel_y(300, res), res[0], res[1])
                                     time.sleep(0.2)
                                 else:
                                     logging.info(f"合成 {tpl} ({conf:.2f})")
@@ -235,8 +250,14 @@ class AutomationWorker(QThread):
                         stats, offsets, settlement_tpls, _click, sr_delay):
         GS = GameState
 
+        def sx(px):
+            return _rel_x(px, res)
+
+        def sy(px):
+            return _rel_y(px, res)
+
         def click_last(dx=0, dy=0):
-            sim.click_at(detector.last_pos[0] + dx, detector.last_pos[1] + dy, res[0], res[1])
+            sim.click_at(detector.last_pos[0] + sx(dx), detector.last_pos[1] + sy(dy), res[0], res[1])
 
         if state == GS.MAIN_MENU:
             self._buff_done = False
@@ -285,7 +306,7 @@ class AutomationWorker(QThread):
                 if found:
                     logging.info(f"{name} ({conf:.2f})")
                     if name == "room_fallback":
-                        sim.click_at(pos[0] + 300, pos[1], res[0], res[1])
+                        sim.click_at(pos[0] + sx(300), pos[1], res[0], res[1])
                     else:
                         sim.click_at(pos[0], pos[1], res[0], res[1])
                     if name in ("room_rest", "room_battle", "room_elite", "boss_node", "room_fallback"):
@@ -340,7 +361,7 @@ class AutomationWorker(QThread):
                 y = detector.last_pos[1]
                 for x in (1350, 990, 600):
                     for _ in range(2):
-                        sim.click_at(x, y, res[0], res[1])
+                        sim.click_at(sx(x), y, res[0], res[1])
                         time.sleep(0.2)
         elif state == GS.DEATH_SCREEN:
             logging.info("死亡")
@@ -354,10 +375,10 @@ class AutomationWorker(QThread):
                 cx, cy = detector.last_pos
                 if self._retreat_toggle % 2 == 0:
                     logging.info("撤退 点击1(右455)")
-                    sim.click_at(cx + 455, cy, res[0], res[1])
+                    sim.click_at(cx + sx(455), cy, res[0], res[1])
                 else:
                     logging.info("撤退 点击2(右596上890)")
-                    sim.click_at(cx + 596, cy - 890, res[0], res[1])
+                    sim.click_at(cx + sx(596), cy - sy(890), res[0], res[1])
                 self._retreat_toggle += 1
                 time.sleep(sr_delay)
             else:
@@ -425,7 +446,7 @@ class AutomationWorker(QThread):
             if detector.last_template == "choose_fate":
                 bx, by = detector.last_pos
                 for dx, dy in [(-500, -250), (0, -250), (500, -250), (750, 0)]:
-                    sim.click_at(bx + dx, by + dy, res[0], res[1])
+                    sim.click_at(bx + sx(dx), by + sy(dy), res[0], res[1])
                     time.sleep(0.2)
             else:
                 _click("confirm_acquire")
@@ -447,7 +468,7 @@ class AutomationWorker(QThread):
             logging.info("闪光事件")
             bx, by = detector.last_pos
             for dx, dy in [(-1205, -200), (-1025, -700), (0, 0)]:
-                sim.click_at(bx + dx, by + dy, res[0], res[1])
+                sim.click_at(bx + sx(dx), by + sy(dy), res[0], res[1])
                 time.sleep(0.2)
         elif state == GS.CODEX_COMPLETE:
             logging.info("完成法典")
@@ -455,9 +476,9 @@ class AutomationWorker(QThread):
         elif state == GS.CODEX_OBTAIN:
             logging.info("获得法典")
             cx, cy = detector.last_pos
-            sim.click_at(cx, cy + 430, res[0], res[1])
+            sim.click_at(cx, cy + sy(430), res[0], res[1])
             time.sleep(sr_delay)
-            sim.click_at(cx + 690, cy + 870, res[0], res[1])
+            sim.click_at(cx + sx(690), cy + sy(870), res[0], res[1])
         elif state == GS.CODEX_CONFIRM:
             logging.info("确认图鉴")
             click_last()
@@ -501,8 +522,8 @@ class AutomationWorker(QThread):
         elif state == GS.SELECT_CHARACTER:
             logging.info("选择角色")
             bx, by = detector.last_pos
-            for px, py in [(bx - 500, by - 250), (bx, by - 250), (bx + 500, by - 250), (bx + 750, by)]:
-                sim.click_at(px, py, res[0], res[1])
+            for dx, dy in [(-500, -250), (0, -250), (500, -250), (750, 0)]:
+                sim.click_at(bx + sx(dx), by + sy(dy), res[0], res[1])
                 time.sleep(0.2)
         else:
             time.sleep(t["screenshot_interval"])
@@ -516,7 +537,7 @@ class AutomationWorker(QThread):
                 if tpl == "settlement_confirm":  # 取消选择装备
                     sim.click_at(pos[0], pos[1], res[0], res[1])
                     time.sleep(0.2)
-                    sim.click_at(pos[0] - 420, pos[1], res[0], res[1])
+                    sim.click_at(pos[0] - _rel_x(420, res), pos[1], res[0], res[1])
                 else:
                     sim.click_at(pos[0], pos[1], res[0], res[1])
                 clicked = True
@@ -530,7 +551,7 @@ class AutomationWorker(QThread):
             found, conf, pos = detector.matcher.match(frame, "codex_btn3", 0.95)
             if found:
                 logging.info(f"合成 codex_btn3 ({conf:.2f}) 往上300像素点击")
-                sim.click_at(pos[0], pos[1] - 300, res[0], res[1])
+                sim.click_at(pos[0], pos[1] - _rel_y(300, res), res[0], res[1])
                 time.sleep(0.2)
                 sim.click_at(pos[0], pos[1], res[0], res[1])
                 clicked = True
@@ -563,19 +584,19 @@ class AutomationWorker(QThread):
                 elif ocr_state.exit_idx >= 2:
                     target_state = GameState.SKIP_CONFIRM
                 if target_state is not None and state == target_state:
-                    cx, cy = detector.last_pos[0] + offset[0], detector.last_pos[1] + offset[1]
+                    cx, cy = detector.last_pos[0] + _rel_x(offset[0], res), detector.last_pos[1] + _rel_y(offset[1], res)
                     logging.info(f"模板匹配 {kw} ({cx},{cy}) conf={detector.last_conf:.3f}")
                     sim.click_at(cx, cy, res[0], res[1])
                     ocr_state.exit_idx += 1
                 else:
                     pos = ocr.find_text(frame, kw, None, consecutive=True)
                     if pos:
-                        cx, cy = pos[0] + offset[0], pos[1] + offset[1]
+                        cx, cy = pos[0] + _rel_x(offset[0], res), pos[1] + _rel_y(offset[1], res)
                         logging.info(f"找到 {kw} ({cx},{cy})")
                         sim.click_at(cx, cy, res[0], res[1])
                         ocr_state.exit_idx += 1
                     elif state == GameState.RETREAT:
-                        cx, cy = detector.last_pos[0] + offset[0], detector.last_pos[1] + offset[1]
+                        cx, cy = detector.last_pos[0] + _rel_x(offset[0], res), detector.last_pos[1] + _rel_y(offset[1], res)
                         logging.info(f"模板已到 {kw} ({cx},{cy})")
                         sim.click_at(cx, cy, res[0], res[1])
                         ocr_state.exit_idx += 1
