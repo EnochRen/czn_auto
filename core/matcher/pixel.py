@@ -134,8 +134,10 @@ class PixelChecker:
         first_pt: Optional[Tuple[int, int]] = None
         results: List[bool] = []
         for p in rule.points:
-            px = int(p.rx * fw)
-            py = int(p.ry * fh)
+            # 用四舍五入还原采样像素：采样导出 rx=ix/iw 经 4 位小数舍入后，
+            # 若用 int() 向下取整会偶发偏 1 像素，在边缘/文字处采到错误颜色。
+            px = int(round(p.rx * fw))
+            py = int(round(p.ry * fh))
             if first_pt is None:
                 first_pt = (px, py)
             if not (0 <= px < fw and 0 <= py < fh):
