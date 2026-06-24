@@ -59,6 +59,7 @@ class GameState(Enum):
     CHAOS_CENTER = "chaos_center"
     CONFIRM_ORANGE = "confirm_orange"
     BUTTON_BLUE = "button_blue"
+    BATTLE_IN_EVENT = "battle_in_event"
     GAME_SETTLED = "game_settled"
     CONFIRM_EXTRACT = "button_extract"
     CONFIRM_PURPLE = "button_confirm_purple"

@@ -393,6 +393,9 @@ class AutomationWorker(QThread):
         elif state == GS.BUTTON_BLUE:
             logging.info("蓝色按钮")
             click_last()
+        elif state == GS.BATTLE_IN_EVENT:
+            logging.info("事件战斗按钮")
+            click_last()
         elif state == GS.EVENT_SKIP:
             logging.info("跳过事件")
             click_last()
