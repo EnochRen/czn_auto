@@ -16,7 +16,9 @@
     "mode": "pc",
     "mission": "zero_system",
     "retreat_on_first_floor": false,
-    "prevent_lock": true
+    "prevent_lock": true,
+    "prev_input_backend": "postmessage",
+    "prev_capture_method": "framepool"
   },
   "hotkey": {
     "stop": "f8",
