@@ -67,4 +67,5 @@ class GameState(Enum):
     CONTINUE_ORANGE = "continue_orange"
     EVENT_SKIP = "event_skip"
     COPY_CARD_CHOICE = "copy_card_choice"
+    EVENT_CHOICE_DOUBLE = "event_choice_double"
     UNKNOWN = "unknown"

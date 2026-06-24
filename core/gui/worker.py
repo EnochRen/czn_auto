@@ -404,6 +404,11 @@ class AutomationWorker(QThread):
             for rx in (0.25, 0.5, 0.75):
                 sim.click_at(int(rx * res[0]), int(0.5 * res[1]), res[0], res[1])
                 time.sleep(0.2)
+        elif state == GS.EVENT_CHOICE_DOUBLE:
+            logging.info("事件双选项 点击5次")
+            for _ in range(5):
+                sim.click_at(int(0.63 * res[0]), int(0.83 * res[1]), res[0], res[1])
+                time.sleep(0.3)
         elif state == GS.CLOSE_VIEW:
             logging.info("关闭视图")
             _click("close_view")
