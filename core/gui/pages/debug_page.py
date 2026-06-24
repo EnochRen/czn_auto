@@ -58,8 +58,9 @@ def diagnose_frame(cfg: ConfigManager, frame: np.ndarray) -> dict:
         pts: list[dict] = []
         hit_points: list[tuple[int, int, bool]] = []
         for p in rule.points:
-            px = int(p.rx * fw)
-            py = int(p.ry * fh)
+            # 与 PixelChecker.match 保持一致：四舍五入还原采样像素，避免偏 1 像素
+            px = int(round(p.rx * fw))
+            py = int(round(p.ry * fh))
             oob = not (0 <= px < fw and 0 <= py < fh)
             if oob:
                 pts.append({"rx": p.rx, "ry": p.ry, "oob": True})
@@ -121,11 +122,13 @@ class ClickableImageView(QWidget):
         self.setMinimumSize(480, 270)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setCursor(Qt.CursorShape.CrossCursor)
+        self.setMouseTracking(True)  # 即使不按键也接收 mouseMove，实时跟随光标
         self._frame: np.ndarray | None = None   # BGR
         self._qimg: QImage | None = None
         self._points: list[tuple[int, int, QColor]] = []  # 原图坐标 + 颜色
         self._rule_points: list[tuple[int, int, bool]] = []  # 命中规则的像素点 + 是否通过
         self._draw_rect = QRect()  # 当前图像在控件中的绘制区域
+        self._hover: tuple[int, int] | None = None  # 当前光标对应的原图坐标 (ix, iy)
 
     @property
     def has_frame(self) -> bool:
@@ -138,6 +141,7 @@ class ClickableImageView(QWidget):
         self._qimg = QImage(rgb.data, w, h, 3 * w, QImage.Format.Format_RGB888).copy()
         self._points.clear()
         self._rule_points.clear()
+        self._hover = None
         self.update()
 
     def set_rule_points(self, points: list[tuple[int, int, bool]]):
@@ -198,6 +202,70 @@ class ClickableImageView(QWidget):
             f.setBold(True)
             p.setFont(f)
             p.drawText(QPoint(sx + 8, sy - 6), str(i))
+
+        # 跟随光标的实时十字 + 坐标标签
+        if self._hover is not None:
+            self._draw_hover(p, self._hover, iw, ih)
+
+    def _draw_hover(self, p: QPainter, hover: tuple[int, int], iw: int, ih: int):
+        ix, iy = hover
+        rect = self._draw_rect
+        # 计算屏幕坐标（贯穿整图的十字线）
+        sx = rect.x() + int((ix + 0.5) / iw * rect.width())
+        sy = rect.y() + int((iy + 0.5) / ih * rect.height())
+        p.setPen(QPen(QColor(Palette.PRIMARY), 1))
+        p.drawLine(rect.x(), sy, rect.x() + rect.width(), sy)
+        p.drawLine(sx, rect.y(), sx, rect.y() + rect.height())
+
+        # 取当前像素 RGB
+        if self._frame is not None and 0 <= iy < self._frame.shape[0] and 0 <= ix < self._frame.shape[1]:
+            b, g, r = (int(v) for v in self._frame[iy, ix][:3])
+        else:
+            r = g = b = 0
+        rx = ix / iw if iw else 0.0
+        ry = iy / ih if ih else 0.0
+        text = f"px({ix},{iy})  rx={rx:.4f} ry={ry:.4f}  RGB({r},{g},{b})"
+
+        f = QFont()
+        f.setBold(True)
+        p.setFont(f)
+        fm = p.fontMetrics()
+        tw = fm.horizontalAdvance(text)
+        th = fm.height()
+        pad = 6
+        # 默认放在光标右下方，靠近边缘时翻转避免溢出
+        bx = sx + 12
+        by = sy + 12
+        if bx + tw + pad * 2 > rect.x() + rect.width():
+            bx = sx - 12 - (tw + pad * 2)
+        if by + th + pad * 2 > rect.y() + rect.height():
+            by = sy - 12 - (th + pad * 2)
+        box = QRect(bx, by, tw + pad * 2, th + pad * 2)
+        p.fillRect(box, QColor(0, 0, 0, 180))
+        p.setPen(QColor(Palette.TEXT_STRONG))
+        p.drawText(box, Qt.AlignmentFlag.AlignCenter, text)
+
+    def _pos_to_image(self, pos) -> tuple[int, int] | None:
+        """把控件坐标转成原图像素坐标，越界返回 None。"""
+        if self._qimg is None:
+            return None
+        rect = self._compute_draw_rect()
+        if not rect.contains(pos):
+            return None
+        iw, ih = self._qimg.width(), self._qimg.height()
+        ix = int((pos.x() - rect.x()) / rect.width() * iw)
+        iy = int((pos.y() - rect.y()) / rect.height() * ih)
+        ix = max(0, min(iw - 1, ix))
+        iy = max(0, min(ih - 1, iy))
+        return ix, iy
+
+    def mouseMoveEvent(self, event):
+        self._hover = self._pos_to_image(event.position().toPoint())
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hover = None
+        self.update()
 
     def mousePressEvent(self, event):
         if self._frame is None or self._qimg is None:
